@@ -88,8 +88,8 @@ async def mark_cleaned(request: CleaningRequest):
 async def get_available_cleanings(wasteType: str = None, userType: str = None):
     """Get available cleanings to participate in"""
     try:
-        from services.firebase_service import get_db
-        db = get_db()
+        from services.firebase_service import get_firestore_client
+        db = get_firestore_client()
         
         # Query active reports (status = "active")
         query = db.collection("reports").where("status", "==", "active")
@@ -121,6 +121,7 @@ async def get_available_cleanings(wasteType: str = None, userType: str = None):
         
         return {"success": True, "cleanings": cleanings}
     except Exception as e:
+        print(f"Error fetching cleanings: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 def get_points_for_waste_type(waste_type: str) -> int:

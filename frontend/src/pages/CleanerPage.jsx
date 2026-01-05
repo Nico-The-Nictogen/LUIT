@@ -20,9 +20,13 @@ export default function CleanerPage() {
     setLoading(true)
     try {
       const response = await cleaningApi.getAvailableCleanings(selectedTab, userType)
+      console.log('Cleanings response:', response.data)
       setCleanings(response.data.cleanings || [])
+      if (!response.data.cleanings || response.data.cleanings.length === 0) {
+        console.log('No cleanings found for wasteType:', selectedTab)
+      }
     } catch (err) {
-      console.error('Failed to fetch cleanings')
+      console.error('Failed to fetch cleanings:', err.response?.data || err.message)
     } finally {
       setLoading(false)
     }

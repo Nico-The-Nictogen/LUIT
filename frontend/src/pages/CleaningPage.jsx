@@ -11,17 +11,26 @@ export default function CleaningPage() {
   const setLocation = useLocationStore((state) => state.setLocation)
   const { latitude, longitude } = useLocationStore()
   
-  const [stage, setStage] = useState('loading') // loading -> location -> after -> verify
+  const [stage, setStage] = useState('loading') // loading -> location -> after -> verify -> error
   const [beforeImage, setBeforeImage] = useState(null)
   const [afterImage, setAfterImage] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [locationLoading, setLocationLoading] = useState(false)
+  const [cameraActive, setCameraActive] = useState(false)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
+  const streamRef = useRef(null)
 
   useEffect(() => {
     fetchReport()
+    
+    // Cleanup: stop camera on unmount
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
   }, [])
 
   const fetchReport = async () => {
@@ -48,7 +57,7 @@ export default function CleaningPage() {
           setLocationLoading(false)
           setError('')
           setStage('after')
-          startCamera()
+          // Don't auto-start camera, wait for user to click capture
         },
         (err) => {
           setError('Failed to get location. Please enable GPS.')
@@ -60,14 +69,23 @@ export default function CleaningPage() {
 
   const startCamera = async () => {
     try {
+      setError('')
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }
       })
+      streamRef.current = stream
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play()
+          setCameraActive(true)
+        }
       }
     } catch (err) {
-      setError('Cannot access camera')
+      console.error('Camera error:', err)
+      setError('Cannot access camera: ' + err.message)
+      setCameraActive(false)
     }
   }
 
@@ -168,21 +186,34 @@ export default function CleaningPage() {
               <p className="text-center text-gray-700">🧹 Clean the area and take an AFTER photo to verify</p>
             </div>
 
-            <p className="text-center text-gray-600 mb-4">📷 Capture the AFTER image</p>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full bg-black rounded-lg mb-4"
-              style={{ maxHeight: '400px', objectFit: 'cover' }}
-            />
-            <button
-              onClick={captureImage}
-              disabled={loading}
-              className="w-full py-3 bg-green-600 disabled:bg-gray-400 text-white font-bold rounded-lg"
-            >
-              {loading ? 'Verifying...' : 'Capture AFTER Image'}
-            </button>
+            {!cameraActive && (
+              <button
+                onClick={startCamera}
+                className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg mb-4"
+              >
+                📷 Open Camera
+              </button>
+            )}
+
+            {cameraActive && (
+              <div>
+                <p className="text-center text-gray-600 mb-4">Capture the AFTER image</p>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full bg-black rounded-lg mb-4"
+                  style={{ maxHeight: '400px', objectFit: 'cover' }}
+                />
+                <button
+                  onClick={captureImage}
+                  disabled={loading}
+                  className="w-full py-3 bg-green-600 disabled:bg-gray-400 text-white font-bold rounded-lg"
+                >
+                  {loading ? 'Verifying...' : 'Capture AFTER Image'}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

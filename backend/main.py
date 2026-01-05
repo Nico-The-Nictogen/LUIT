@@ -27,8 +27,6 @@ origins = [
     "http://192.168.29.84:5174",
     # Production
     os.getenv("FRONTEND_URL", "http://localhost:3000"),
-    # Vercel pattern (add specific domain after deployment)
-    "https://*.vercel.app",
 ]
 
 app.add_middleware(
@@ -37,7 +35,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_origin_regex="http://localhost:*",
+    allow_origin_regex=r"(http://localhost.*|https://.*\.vercel\.app)",
 )
 
 logger.info(f"✅ CORS enabled for: {origins}")

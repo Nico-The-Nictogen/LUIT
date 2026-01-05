@@ -14,4 +14,3 @@ requests==2.31.0
 email-validator==2.3.0
 numpy==1.26.4
 opencv-python-headless==4.9.0.80
-ultralytics==8.1.11

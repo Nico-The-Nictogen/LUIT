@@ -1,5 +1,6 @@
 FROM python:3.13-slim
 
+# Force rebuild - Jan 5 2026
 WORKDIR /app
 
 # Install build dependencies for numpy compilation

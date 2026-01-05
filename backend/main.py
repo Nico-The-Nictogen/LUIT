@@ -12,16 +12,26 @@ load_dotenv()
 
 app = FastAPI(title="LUIT Backend", version="1.0.0")
 
-# CORS Configuration - Allow all origins for now
+# CORS Configuration - Allow specific origins
+allowed_origins = [
+    "https://luit.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,  # Must be False when using wildcard
-    allow_methods=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
 
-logger.info("✅ CORS enabled for all origins")
+logger.info("✅ CORS enabled for origins: " + ", ".join(allowed_origins))
 
 @app.get("/health")
 def health_check():

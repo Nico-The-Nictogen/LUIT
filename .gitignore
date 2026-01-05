@@ -1,0 +1,27 @@
+# Node / frontend
+node_modules/
+dist/
+.vite/
+.env.local
+.env.*.local
+
+# Python / backend
+venv/
+.env
+.env.development
+.env.production
+__pycache__/
+*.pyc
+*.pyo
+
+# Secrets / credentials
+serviceAccountKey.json
+firebase-key.json
+*.pem
+*.p12
+
+# OS / tooling
+.DS_Store
+Thumbs.db
+*.log
+.parcel-cache/

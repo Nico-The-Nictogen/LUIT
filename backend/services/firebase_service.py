@@ -9,25 +9,36 @@ settings = get_settings()
 # Initialize Firebase
 def init_firebase():
     if not firebase_admin._apps:
-        cred_dict = {
-            "type": "service_account",
-            "project_id": settings.firebase_project_id,
-            "private_key_id": settings.firebase_private_key_id,
-            "private_key": settings.firebase_private_key.replace('\\n', '\n'),
-            "client_email": settings.firebase_client_email,
-            "client_id": settings.firebase_client_id,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs"
-        }
-        cred = credentials.Certificate(cred_dict)
-        # Explicitly set project_id when initializing
-        firebase_admin.initialize_app(cred, {
-            'projectId': settings.firebase_project_id
-        })
-        print(f"✅ Firebase initialized with project: {settings.firebase_project_id}")
+        try:
+            # Check if project_id is set
+            if not settings.firebase_project_id:
+                print("❌ ERROR: FIREBASE_PROJECT_ID is not set!")
+                return False
+                
+            cred_dict = {
+                "type": "service_account",
+                "project_id": settings.firebase_project_id,
+                "private_key_id": settings.firebase_private_key_id,
+                "private_key": settings.firebase_private_key.replace('\\n', '\n'),
+                "client_email": settings.firebase_client_email,
+                "client_id": settings.firebase_client_id,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs"
+            }
+            cred = credentials.Certificate(cred_dict)
+            # Explicitly set project_id when initializing
+            firebase_admin.initialize_app(cred, {
+                'projectId': settings.firebase_project_id
+            })
+            print(f"✅ Firebase initialized with project: {settings.firebase_project_id}")
+            return True
+        except Exception as e:
+            print(f"❌ Firebase initialization failed: {str(e)}")
+            return False
     else:
         print(f"ℹ️  Firebase already initialized")
+        return True
 
 init_firebase()
 

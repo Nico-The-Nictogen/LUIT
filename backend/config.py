@@ -3,19 +3,19 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # Firebase
-    firebase_project_id: str
-    firebase_private_key_id: str
-    firebase_private_key: str
-    firebase_client_email: str
-    firebase_client_id: str
+    firebase_project_id: str = ""
+    firebase_private_key_id: str = ""
+    firebase_private_key: str = ""
+    firebase_client_email: str = ""
+    firebase_client_id: str = ""
     
     # Google Cloud
-    google_cloud_project_id: str
+    google_cloud_project_id: str = ""
     
     # Cloudinary
-    cloudinary_cloud_name: str
-    cloudinary_api_key: str
-    cloudinary_api_secret: str
+    cloudinary_cloud_name: str = ""
+    cloudinary_api_key: str = ""
+    cloudinary_api_secret: str = ""
     
     # Backend
     backend_port: int = 5000

@@ -88,14 +88,48 @@ async def mark_cleaned(request: CleaningRequest):
 async def get_available_cleanings(wasteType: str = None, userType: str = None):
     """Get available cleanings to participate in"""
     try:
-        # Query active reports
-        # Filter by waste type if specified
-        # NGOs see all types including sewage
-        # Individuals don't see sewage type
+        from services.firebase_service import get_db
+        db = get_db()
+        
+        # Query active reports (status = "active")
+        query = db.collection("reports").where("status", "==", "active")
+        reports = query.stream()
         
         cleanings = []
-        # Implementation would query Firestore for active reports
+        for report in reports:
+            report_data = report.to_dict()
+            
+            # Filter by waste type if specified
+            if wasteType and report_data.get("wasteType") != wasteType:
+                continue
+            
+            # Individuals shouldn't see sewage
+            if userType == "individual" and report_data.get("wasteType") == "sewage":
+                continue
+            
+            # Add to cleanings list with calculated distance (placeholder)
+            cleaning = {
+                "id": report.id,
+                "imageUrl": report_data.get("imageUrl", ""),
+                "wasteType": report_data.get("wasteType", "unknown"),
+                "latitude": report_data.get("latitude", 0),
+                "longitude": report_data.get("longitude", 0),
+                "distance": 0,  # Distance would be calculated from user location
+                "points": get_points_for_waste_type(report_data.get("wasteType", ""))
+            }
+            cleanings.append(cleaning)
         
         return {"success": True, "cleanings": cleanings}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+def get_points_for_waste_type(waste_type: str) -> int:
+    """Get points for cleaning a specific waste type"""
+    points_map = {
+        "plastic": 10,
+        "organic": 20,
+        "mixed": 30,
+        "toxic": 50,
+        "sewage": 100
+    }
+    return points_map.get(waste_type, 10)

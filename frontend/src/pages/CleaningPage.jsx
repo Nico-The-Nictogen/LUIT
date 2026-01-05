@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLocationStore, useAuthStore } from '../store'
-import { cleaningApi, locationApi } from '../api'
+import { cleaningApi, locationApi, reportingApi } from '../api'
 
 export default function CleaningPage() {
   const navigate = useNavigate()
@@ -11,7 +11,7 @@ export default function CleaningPage() {
   const setLocation = useLocationStore((state) => state.setLocation)
   const { latitude, longitude } = useLocationStore()
   
-  const [stage, setStage] = useState('location') // location -> before -> cleaning -> after -> verify
+  const [stage, setStage] = useState('loading') // loading -> location -> after -> verify
   const [beforeImage, setBeforeImage] = useState(null)
   const [afterImage, setAfterImage] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -21,8 +21,19 @@ export default function CleaningPage() {
   const canvasRef = useRef(null)
 
   useEffect(() => {
-    getLocation()
+    fetchReport()
   }, [])
+
+  const fetchReport = async () => {
+    try {
+      const response = await reportingApi.getReport(reportId)
+      const report = response.data
+      setBeforeImage(report.imageUrl)
+      getLocation()
+    } catch (err) {
+      setError('Failed to load report')
+    }
+  }
 
   const getLocation = () => {
     setLocationLoading(true)
@@ -33,7 +44,8 @@ export default function CleaningPage() {
           setLocation(latitude, longitude, position.coords.accuracy)
           setLocationLoading(false)
           setError('')
-          setStage('before')
+          setStage('after')
+          startCamera()
         },
         (err) => {
           setError('Failed to get location. Please enable GPS.')
@@ -56,19 +68,13 @@ export default function CleaningPage() {
     }
   }
 
-  const captureImage = (type) => {
+  const captureImage = async () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d')
       context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height)
       const imageData = canvasRef.current.toDataURL('image/jpeg')
-      
-      if (type === 'before') {
-        setBeforeImage(imageData)
-        setStage('cleaning')
-      } else if (type === 'after') {
-        setAfterImage(imageData)
-        handleVerify(imageData)
-      }
+      setAfterImage(imageData)
+      await handleVerify(imageData)
     }
   }
 
@@ -86,7 +92,7 @@ export default function CleaningPage() {
       if (!response.data.is_cleaned) {
         setError(response.data.message)
         setAfterImage(null)
-        setStage('cleaning')
+        setStage('after')
       } else {
         // Mark as cleaned
         await cleaningApi.markCleaned({
@@ -94,6 +100,7 @@ export default function CleaningPage() {
           beforeImageBase64: beforeImage,
           afterImageBase64: afterImg,
           userId: user?.id,
+          userName: user?.name || 'Anonymous',
           userType
         })
         setStage('verify')
@@ -101,7 +108,7 @@ export default function CleaningPage() {
     } catch (err) {
       setError(err.response?.data?.detail || 'Verification failed')
       setAfterImage(null)
-      setStage('cleaning')
+      setStage('after')
     } finally {
       setLoading(false)
     }
@@ -124,65 +131,28 @@ export default function CleaningPage() {
       <main className="max-w-md mx-auto px-4 py-6">
         {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
 
-        {stage === 'location' && (
+        {stage === 'loading' && (
           <div className="text-center py-8">
-            {locationLoading ? (
-              <p className="text-gray-600">Getting your location...</p>
-            ) : (
-              <button
-                onClick={getLocation}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold"
-              >
-                Enable Location
-              </button>
-            )}
+            <p className="text-gray-600">Loading report...</p>
           </div>
         )}
 
-        {stage === 'before' && (
+        {stage === 'after' && beforeImage && (
           <div>
-            <p className="text-center text-gray-600 mb-4">📷 Capture the BEFORE image</p>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full bg-black rounded-lg mb-4"
-              style={{ maxHeight: '400px', objectFit: 'cover' }}
-              onLoadedMetadata={startCamera}
-            />
-            <button
-              onClick={() => captureImage('before')}
-              className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg"
-            >
-              Capture BEFORE
-            </button>
-          </div>
-        )}
-
-        {stage === 'cleaning' && (
-          <div>
-            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-              <p className="text-center text-gray-700">🧹 Please clean the area now</p>
+            <div className="mb-6">
+              <h2 className="text-center font-semibold text-gray-800 mb-2">📍 BEFORE (Original Report)</h2>
+              <img
+                src={beforeImage}
+                alt="Before"
+                className="w-full rounded-lg object-cover border-2 border-blue-300"
+                style={{ maxHeight: '300px' }}
+              />
             </div>
-            <img
-              src={beforeImage}
-              alt="Before"
-              className="w-full rounded-lg mb-4 max-h-48 object-contain border-2 border-blue-300"
-            />
-            <button
-              onClick={() => {
-                setStage('after')
-                startCamera()
-              }}
-              className="w-full py-3 bg-green-600 text-white font-bold rounded-lg"
-            >
-              Area Cleaned - Take AFTER Photo
-            </button>
-          </div>
-        )}
 
-        {stage === 'after' && (
-          <div>
+            <div className="bg-green-50 p-4 rounded-lg mb-4">
+              <p className="text-center text-gray-700">🧹 Clean the area and take an AFTER photo to verify</p>
+            </div>
+
             <p className="text-center text-gray-600 mb-4">📷 Capture the AFTER image</p>
             <video
               ref={videoRef}
@@ -192,11 +162,11 @@ export default function CleaningPage() {
               style={{ maxHeight: '400px', objectFit: 'cover' }}
             />
             <button
-              onClick={() => captureImage('after')}
+              onClick={captureImage}
               disabled={loading}
               className="w-full py-3 bg-green-600 disabled:bg-gray-400 text-white font-bold rounded-lg"
             >
-              {loading ? 'Verifying...' : 'Capture AFTER'}
+              {loading ? 'Verifying...' : 'Capture AFTER Image'}
             </button>
           </div>
         )}

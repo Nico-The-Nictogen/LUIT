@@ -53,14 +53,18 @@ async def mark_cleaned(request: CleaningRequest):
         }
         points_awarded = points_map.get(report.get('wasteType'), 10)
         
-        # Update report as cleaned
+        # Update report as cleaned - remove location and images, keep only status and points
         update_data = {
             "status": "cleaned",
             "cleanedBy": request.userId,
             "cleanedByName": request.userName,
             "cleanedAt": datetime.now().isoformat(),
-            "afterImageUrl": upload_result['url'],
-            "afterImagePublicId": upload_result['public_id']
+            "latitude": None,  # Remove location
+            "longitude": None,
+            "imageUrl": None,  # Remove before image
+            "imagePublicId": None,
+            "afterImageUrl": None,  # Remove after image
+            "afterImagePublicId": None
         }
         update_document("reports", request.reportId, update_data)
         

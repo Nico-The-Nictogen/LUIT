@@ -12,6 +12,7 @@ export default function CleaningPage() {
   const { latitude, longitude } = useLocationStore()
   
   const [beforeImage, setBeforeImage] = useState(null)
+  const [beforeImageBase64, setBeforeImageBase64] = useState(null)
   const [afterImage, setAfterImage] = useState(null)
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -45,6 +46,30 @@ export default function CleaningPage() {
       const reportData = response.data.report || response.data
       setReport(reportData)
       setBeforeImage(reportData.imageUrl)
+      
+      // Convert image URL to base64
+      try {
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          canvas.width = img.width
+          canvas.height = img.height
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0)
+          const base64 = canvas.toDataURL('image/jpeg', 0.8)
+          setBeforeImageBase64(base64)
+          console.log('✅ Before image converted to base64')
+        }
+        img.onerror = () => {
+          console.warn('⚠️ Could not load image for conversion, will use URL')
+          setBeforeImageBase64(reportData.imageUrl)
+        }
+        img.src = reportData.imageUrl
+      } catch (err) {
+        console.warn('⚠️ Could not convert image to base64:', err)
+        setBeforeImageBase64(reportData.imageUrl)
+      }
     } catch (err) {
       console.error('Failed to load report:', err)
       setError('Could not load cleanup task')
@@ -153,7 +178,7 @@ export default function CleaningPage() {
         console.log('🔍 Verifying cleanup...')
         const verifyResult = await cleaningApi.verifyCleaning({
           reportId,
-          beforeImageBase64: beforeImage,
+          beforeImageBase64: beforeImageBase64 || beforeImage,
           afterImageBase64: imageData,
           userId: user?.id,
           userName: user?.name || 'Anonymous',
@@ -199,7 +224,7 @@ export default function CleaningPage() {
       console.log('📤 Marking area as cleaned...')
       const result = await cleaningApi.markCleaned({
         reportId,
-        beforeImageBase64: beforeImage,
+        beforeImageBase64: beforeImageBase64 || beforeImage,
         afterImageBase64: afterImage,
         userId: user?.id,
         userName: user?.name || 'Anonymous',

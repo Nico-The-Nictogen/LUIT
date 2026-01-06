@@ -143,7 +143,8 @@ async def get_users_leaderboard(category: str = "reporting", limit: int = 20):
                 user_id = data.get("userId")
                 user_name = data.get("userName", "Anonymous")
                 
-                if user_id:
+                # Skip if no userId (unlogged-in users)
+                if user_id and user_id.strip():
                     if user_id not in user_stats:
                         user_stats[user_id] = {"id": user_id, "name": user_name, "points": 0, "city": ""}
                     user_stats[user_id]["points"] += 10  # 10 points per report
@@ -161,7 +162,8 @@ async def get_users_leaderboard(category: str = "reporting", limit: int = 20):
                 user_name = data.get("userName", "Anonymous")
                 points = data.get("pointsAwarded", 0)
                 
-                if user_id:
+                # Skip if no userId (unlogged-in users)
+                if user_id and user_id.strip():
                     if user_id not in user_stats:
                         user_stats[user_id] = {"id": user_id, "name": user_name, "points": 0, "city": ""}
                     user_stats[user_id]["points"] += points
@@ -190,7 +192,8 @@ async def get_ngos_leaderboard(category: str = "reporting", limit: int = 20):
                 ngo_id = data.get("userId")
                 ngo_name = data.get("userName", "Anonymous NGO")
                 
-                if ngo_id:
+                # Skip if no userId
+                if ngo_id and ngo_id.strip():
                     if ngo_id not in ngo_stats:
                         ngo_stats[ngo_id] = {"id": ngo_id, "name": ngo_name, "points": 0, "city": ""}
                     ngo_stats[ngo_id]["points"] += 10
@@ -207,7 +210,8 @@ async def get_ngos_leaderboard(category: str = "reporting", limit: int = 20):
                 ngo_name = data.get("userName", "Anonymous NGO")
                 points = data.get("pointsAwarded", 0)
                 
-                if ngo_id:
+                # Skip if no userId
+                if ngo_id and ngo_id.strip():
                     if ngo_id not in ngo_stats:
                         ngo_stats[ngo_id] = {"id": ngo_id, "name": ngo_name, "points": 0, "city": ""}
                     ngo_stats[ngo_id]["points"] += points

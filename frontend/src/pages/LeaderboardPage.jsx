@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyticsApi } from '../api'
+import { useAuthStore } from '../store'
 
 export default function LeaderboardPage() {
   const navigate = useNavigate()
-  const [category, setCategory] = useState('users') // users or ngos
+  const user = useAuthStore((state) => state.user)
+  const userType = useAuthStore((state) => state.userType)
+  
+  // Auto-select category based on userType, default to 'users' for non-logged in
+  const initialCategory = userType === 'ngo' ? 'ngos' : 'users'
+  const [category, setCategory] = useState(initialCategory)
   const [type, setType] = useState('reporting') // reporting, cleaning
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Update category when userType changes
+  useEffect(() => {
+    if (userType === 'ngo') {
+      setCategory('ngos')
+    } else if (userType === 'individual') {
+      setCategory('users')
+    }
+  }, [userType])
 
   useEffect(() => {
     fetchLeaderboard()
@@ -45,25 +60,36 @@ export default function LeaderboardPage() {
       </header>
 
       <main className="max-w-md mx-auto px-4 py-4">
-        {/* Category Toggle */}
-        <div className="flex gap-2 mb-4 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setCategory('users')}
-            className={`flex-1 py-2 rounded-md font-semibold transition ${
-              category === 'users' ? 'bg-purple-600 text-white' : 'text-gray-600'
-            }`}
-          >
-            Users
-          </button>
-          <button
-            onClick={() => setCategory('ngos')}
-            className={`flex-1 py-2 rounded-md font-semibold transition ${
-              category === 'ngos' ? 'bg-purple-600 text-white' : 'text-gray-600'
-            }`}
-          >
-            NGOs
-          </button>
-        </div>
+        {/* Category Toggle - Only show for non-logged-in users */}
+        {!user && (
+          <div className="flex gap-2 mb-4 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setCategory('users')}
+              className={`flex-1 py-2 rounded-md font-semibold transition ${
+                category === 'users' ? 'bg-purple-600 text-white' : 'text-gray-600'
+              }`}
+            >
+              Users
+            </button>
+            <button
+              onClick={() => setCategory('ngos')}
+              className={`flex-1 py-2 rounded-md font-semibold transition ${
+                category === 'ngos' ? 'bg-purple-600 text-white' : 'text-gray-600'
+              }`}
+            >
+              NGOs
+            </button>
+          </div>
+        )}
+        
+        {/* Show current category for logged-in users */}
+        {user && (
+          <div className="mb-4 text-center">
+            <p className="text-sm text-gray-600">
+              Viewing {category === 'users' ? 'User' : 'NGO'} Leaderboard
+            </p>
+          </div>
+        )}
 
         {/* Type Tabs */}
         <div className="flex gap-2 mb-4">

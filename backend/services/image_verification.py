@@ -45,13 +45,28 @@ def basic_garbage_detection(image_array):
         # 3. Texture complexity
         laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
         
-        # Simple heuristic: if image has high complexity, likely garbage
-        is_garbage = edge_density > 0.1 or color_variance > 2000 or laplacian_var > 100
-        confidence = min(0.85, (edge_density * 5 + color_variance / 5000 + laplacian_var / 200))
+        logger.info(f"🔍 Image metrics - Edge density: {edge_density:.4f}, Color variance: {color_variance:.2f}, Laplacian: {laplacian_var:.2f}")
+        
+        # More strict heuristic: require multiple indicators
+        # Most regular photos will have some complexity, so we need higher thresholds
+        score = 0
+        if edge_density > 0.15:  # Increased from 0.1
+            score += 1
+        if color_variance > 3000:  # Increased from 2000
+            score += 1
+        if laplacian_var > 150:  # Increased from 100
+            score += 1
+        
+        # Require at least 2 out of 3 indicators for garbage
+        is_garbage = score >= 2
+        confidence = min(0.85, score / 3.0 + 0.3)
+        
+        logger.info(f"{'✅' if is_garbage else '❌'} Garbage detection: score={score}/3, is_garbage={is_garbage}, confidence={confidence:.2f}")
         
         return is_garbage, confidence
-    except:
-        return True, 0.5  # Default to accepting image
+    except Exception as e:
+        logger.error(f"❌ Detection error: {str(e)}")
+        return False, 0.0  # Changed from True to False - reject by default on error
 
 async def verify_garbage_image(image_base64: str) -> dict:
     """

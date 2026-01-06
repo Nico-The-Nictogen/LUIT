@@ -17,7 +17,6 @@ export default function CleaningPage() {
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [locationLoading, setLocationLoading] = useState(false)
   const [verification, setVerification] = useState(null)
   const [verifying, setVerifying] = useState(false)
@@ -235,8 +234,7 @@ export default function CleaningPage() {
         userType
       })
       console.log('✅ Success:', result.data)
-      setSuccess('✅ Cleanup verified and recorded!')
-      setTimeout(() => navigate('/dashboard'), 2000)
+      navigate('/cleaner')
     } catch (err) {
       console.error('❌ Submit error:', err)
       setError('Error submitting cleanup: ' + (err.response?.data?.detail || err.message))
@@ -262,12 +260,6 @@ export default function CleaningPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4">
             {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg mb-4">
-            {success}
           </div>
         )}
 

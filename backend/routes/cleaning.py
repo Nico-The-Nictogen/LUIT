@@ -41,6 +41,8 @@ async def mark_cleaned(request: CleaningRequest):
         if not report:
             return {"success": False, "message": "Report not found"}
         
+        logger.info(f"📋 Report data: imagePublicId={report.get('imagePublicId')}, imageUrl={report.get('imageUrl')}")
+        
         # Delete before image from Cloudinary if it exists
         if report.get('imagePublicId'):
             try:

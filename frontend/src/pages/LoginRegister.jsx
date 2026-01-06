@@ -31,6 +31,17 @@ export default function LoginRegister() {
     setError('')
 
     try {
+      // Admin login
+      if (userType === 'admin') {
+        if (formData.password === 'Checker123') {
+          navigate('/admin')
+        } else {
+          setError('Invalid admin password')
+        }
+        setLoading(false)
+        return
+      }
+
       if (isLogin) {
         const response = await authApi.login({
           userType,
@@ -85,10 +96,10 @@ export default function LoginRegister() {
         </div>
 
         {/* User Type Toggle */}
-        <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setUserTypeLocal('individual')}
-            className={`flex-1 py-2 text-sm rounded-md font-semibold transition ${
+            className={`py-2 text-sm rounded-md font-semibold transition ${
               userType === 'individual' ? 'bg-green-600 text-white' : 'text-gray-600'
             }`}
           >
@@ -96,11 +107,19 @@ export default function LoginRegister() {
           </button>
           <button
             onClick={() => setUserTypeLocal('ngo')}
-            className={`flex-1 py-2 text-sm rounded-md font-semibold transition ${
+            className={`py-2 text-sm rounded-md font-semibold transition ${
               userType === 'ngo' ? 'bg-green-600 text-white' : 'text-gray-600'
             }`}
           >
             NGO
+          </button>
+          <button
+            onClick={() => setUserTypeLocal('admin')}
+            className={`py-2 text-sm rounded-md font-semibold transition ${
+              userType === 'admin' ? 'bg-red-600 text-white' : 'text-gray-600'
+            }`}
+          >
+            Admin
           </button>
         </div>
 
@@ -117,82 +136,97 @@ export default function LoginRegister() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && userType === 'individual' && (
+          {userType === 'admin' ? (
+            // Admin only needs password
             <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
+              type="password"
+              name="password"
+              placeholder="Admin Password"
+              value={formData.password}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
             />
-          )}
+          ) : (
+            <>
+              {!isLogin && userType === 'individual' && (
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              )}
 
-          {!isLogin && userType === 'ngo' && (
-            <input
-              type="text"
-              name="ngoName"
-              placeholder="NGO Name"
-              value={formData.ngoName}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          )}
+              {!isLogin && userType === 'ngo' && (
+                <input
+                  type="text"
+                  name="ngoName"
+                  placeholder="NGO Name"
+                  value={formData.ngoName}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              )}
 
-          {isLogin && userType === 'individual' && (
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          )}
+              {isLogin && userType === 'individual' && (
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              )}
 
-          {isLogin && userType === 'ngo' && (
-            <input
-              type="text"
-              name="ngoName"
-              placeholder="NGO Name"
-              value={formData.ngoName}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          )}
+              {isLogin && userType === 'ngo' && (
+                <input
+                  type="text"
+                  name="ngoName"
+                  placeholder="NGO Name"
+                  value={formData.ngoName}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              )}
 
-          {!isLogin && (
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          )}
+              {!isLogin && (
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              )}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-          />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
+            </>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold rounded-lg transition"
+            className={`w-full py-3 ${userType === 'admin' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} disabled:bg-gray-400 text-white font-bold rounded-lg transition`}
           >
-            {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
+            {loading ? 'Processing...' : userType === 'admin' ? 'Access Admin Panel' : isLogin ? 'Login' : 'Register'}
           </button>
         </form>
 

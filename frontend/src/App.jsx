@@ -11,6 +11,7 @@ import ReportingPage from './pages/ReportingPage'
 import CleanerPage from './pages/CleanerPage'
 import CleaningPage from './pages/CleaningPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import AdminDashboard from './pages/AdminDashboard'
 
 function App() {
   const user = useAuthStore((state) => state.user)
@@ -44,6 +45,9 @@ function App() {
 
         {/* Leaderboard - Public */}
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+
+        {/* Admin Route */}
+        <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" />} />

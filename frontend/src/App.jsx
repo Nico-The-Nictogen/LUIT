@@ -20,8 +20,8 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<MainPage />} />
-        <Route path="/login" element={user ? <Navigate to="/" /> : <LoginRegister />} />
+        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <MainPage />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginRegister />} />
         <Route path="/report" element={<ReportingPage />} />
 
         {/* Protected User Routes */}

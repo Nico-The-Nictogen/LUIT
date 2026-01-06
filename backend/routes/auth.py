@@ -1,8 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from typing import Literal
+from firebase_admin import auth, firestore
+import requests
+import os
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+db = firestore.client()
+
+# Firebase Web API Key
+FIREBASE_WEB_API_KEY = os.getenv("FIREBASE_WEB_API_KEY", "")
+FIREBASE_AUTH_ENDPOINT = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={FIREBASE_WEB_API_KEY}"
+FIREBASE_LOGIN_ENDPOINT = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_WEB_API_KEY}"
 
 class RegisterRequest(BaseModel):
     userType: Literal["individual", "ngo"]
@@ -18,28 +27,94 @@ class LoginRequest(BaseModel):
 
 @router.post("/register")
 async def register(request: RegisterRequest):
-    """Register new user or NGO"""
+    """Register new user or NGO with Firebase Auth"""
     try:
-        # Firebase authentication will be implemented
+        # Create user in Firebase Auth via REST API
+        payload = {
+            "email": request.email,
+            "password": request.password,
+            "returnSecureToken": True
+        }
+        
+        response = requests.post(FIREBASE_AUTH_ENDPOINT, json=payload)
+        auth_data = response.json()
+        
+        if response.status_code != 200:
+            error_msg = auth_data.get('error', {}).get('message', 'Registration failed')
+            raise HTTPException(status_code=400, detail=error_msg)
+        
+        user_id = auth_data.get('localId')
+        id_token = auth_data.get('idToken')
+        
+        # Set custom claims for userType
+        auth.set_custom_user_claims(user_id, {'userType': request.userType})
+        
+        # Store user profile in Firestore
+        user_data = {
+            'userId': user_id,
+            'email': request.email,
+            'userType': request.userType,
+            'name': request.name if request.userType == 'individual' else request.ngoName,
+            'createdAt': firestore.SERVER_TIMESTAMP
+        }
+        
+        db.collection('users').document(user_id).set(user_data)
+        
+        print(f"✅ User registered: {user_id} ({request.userType})")
+        
         return {
             "message": "Registration successful",
-            "userType": request.userType
+            "userType": request.userType,
+            "idToken": id_token,
+            "userId": user_id,
+            "email": request.email
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"❌ Registration error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Registration failed: {str(e)}")
 
 @router.post("/login")
 async def login(request: LoginRequest):
-    """Login user or NGO"""
+    """Login user or NGO with Firebase Auth"""
     try:
-        # Firebase authentication will be implemented
+        # For now, we need to get email from identifier
+        # In production, you'd query Firestore to find user by name/ngoName
+        # For this MVP, we'll accept email as identifier
+        
+        payload = {
+            "email": request.identifier,  # Expect email as identifier
+            "password": request.password,
+            "returnSecureToken": True
+        }
+        
+        response = requests.post(FIREBASE_LOGIN_ENDPOINT, json=payload)
+        auth_data = response.json()
+        
+        if response.status_code != 200:
+            error_msg = auth_data.get('error', {}).get('message', 'Login failed')
+            raise HTTPException(status_code=401, detail=error_msg)
+        
+        user_id = auth_data.get('localId')
+        id_token = auth_data.get('idToken')
+        
+        # Get user profile from Firestore
+        user_doc = db.collection('users').document(user_id).get()
+        user_data = user_doc.to_dict() if user_doc.exists else {}
+        user_type = user_data.get('userType', 'individual')
+        
+        print(f"✅ User logged in: {user_id} ({user_type})")
+        
         return {
             "message": "Login successful",
-            "userType": request.userType,
-            "token": "token_placeholder"
+            "userType": user_type,
+            "idToken": id_token,
+            "userId": user_id,
+            "email": auth_data.get('email'),
+            "name": user_data.get('name', '')
         }
     except Exception as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        print(f"❌ Login error: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Login failed: {str(e)}")
 
 @router.post("/logout")
 async def logout():

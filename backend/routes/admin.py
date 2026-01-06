@@ -34,35 +34,103 @@ async def get_all_cleanings():
 
 @router.get("/users")
 async def get_all_users():
-    """Get all users for admin view"""
+    """Get all unique users from reports and cleanings"""
     try:
-        users_ref = db.collection('users')
-        users = []
-        for doc in users_ref.stream():
-            user_data = doc.to_dict()
-            user_data['id'] = doc.id
-            # Don't send password
-            user_data.pop('password', None)
-            users.append(user_data)
-        return users
+        users_dict = {}
+        
+        # Get users from reports
+        reports_ref = db.collection('reports')
+        for doc in reports_ref.stream():
+            report_data = doc.to_dict()
+            user_id = report_data.get('userId')
+            user_name = report_data.get('userName', 'Unknown')
+            
+            if user_id and user_id not in users_dict:
+                users_dict[user_id] = {
+                    'id': user_id,
+                    'name': user_name,
+                    'userType': 'individual',
+                    'reportsCount': 0,
+                    'cleaningsCount': 0,
+                    'email': report_data.get('userEmail', '')
+                }
+            if user_id:
+                users_dict[user_id]['reportsCount'] += 1
+        
+        # Get users from cleanings
+        cleanings_ref = db.collection('cleanings')
+        for doc in cleanings_ref.stream():
+            cleaning_data = doc.to_dict()
+            user_id = cleaning_data.get('userId')
+            user_name = cleaning_data.get('userName', 'Unknown')
+            
+            if user_id and user_id not in users_dict:
+                users_dict[user_id] = {
+                    'id': user_id,
+                    'name': user_name,
+                    'userType': 'individual',
+                    'reportsCount': 0,
+                    'cleaningsCount': 0,
+                    'email': cleaning_data.get('userEmail', '')
+                }
+            if user_id:
+                users_dict[user_id]['cleaningsCount'] += 1
+        
+        return list(users_dict.values())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching users: {str(e)}")
+        return []
 
 @router.get("/ngos")
 async def get_all_ngos():
-    """Get all NGOs for admin view"""
+    """Get all unique NGOs from reports and cleanings"""
     try:
-        ngos_ref = db.collection('ngos')
-        ngos = []
-        for doc in ngos_ref.stream():
-            ngo_data = doc.to_dict()
-            ngo_data['id'] = doc.id
-            # Don't send password
-            ngo_data.pop('password', None)
-            ngos.append(ngo_data)
-        return ngos
+        ngos_dict = {}
+        
+        # Get NGOs from reports (where userType is ngo)
+        reports_ref = db.collection('reports')
+        for doc in reports_ref.stream():
+            report_data = doc.to_dict()
+            if report_data.get('userType') == 'ngo':
+                user_id = report_data.get('userId')
+                user_name = report_data.get('userName', 'Unknown NGO')
+                
+                if user_id and user_id not in ngos_dict:
+                    ngos_dict[user_id] = {
+                        'id': user_id,
+                        'name': user_name,
+                        'userType': 'ngo',
+                        'reportsCount': 0,
+                        'cleaningsCount': 0,
+                        'email': report_data.get('userEmail', '')
+                    }
+                if user_id:
+                    ngos_dict[user_id]['reportsCount'] += 1
+        
+        # Get NGOs from cleanings
+        cleanings_ref = db.collection('cleanings')
+        for doc in cleanings_ref.stream():
+            cleaning_data = doc.to_dict()
+            if cleaning_data.get('userType') == 'ngo':
+                user_id = cleaning_data.get('userId')
+                user_name = cleaning_data.get('userName', 'Unknown NGO')
+                
+                if user_id and user_id not in ngos_dict:
+                    ngos_dict[user_id] = {
+                        'id': user_id,
+                        'name': user_name,
+                        'userType': 'ngo',
+                        'reportsCount': 0,
+                        'cleaningsCount': 0,
+                        'email': cleaning_data.get('userEmail', '')
+                    }
+                if user_id:
+                    ngos_dict[user_id]['cleaningsCount'] += 1
+        
+        return list(ngos_dict.values())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching NGOs: {str(e)}")
+        return []
 
 @router.delete("/clear/reports")
 async def clear_all_reports():
@@ -147,42 +215,86 @@ async def clear_all_cleanings():
 
 @router.delete("/clear/users")
 async def clear_all_users():
-    """Delete all users from database"""
+    """Delete all user data from reports and reset cleanings"""
     try:
-        users_ref = db.collection('users')
-        batch = db.batch()
         count = 0
         
-        for doc in users_ref.stream():
-            batch.delete(doc.reference)
-            count += 1
-            
-            if count % 500 == 0:
-                batch.commit()
-                batch = db.batch()
+        # Delete all reports
+        reports_ref = db.collection('reports')
+        batch = db.batch()
+        
+        for doc in reports_ref.stream():
+            report_data = doc.to_dict()
+            if report_data.get('userType') != 'ngo':  # Skip NGO reports
+                batch.delete(doc.reference)
+                count += 1
+                
+                if count % 500 == 0:
+                    batch.commit()
+                    batch = db.batch()
         
         batch.commit()
-        return {"message": f"Cleared {count} users"}
+        
+        # Delete user cleanings and reset points
+        cleanings_ref = db.collection('cleanings')
+        cleaning_batch = db.batch()
+        cleaning_count = 0
+        
+        for doc in cleanings_ref.stream():
+            cleaning_data = doc.to_dict()
+            if cleaning_data.get('userType') != 'ngo':  # Skip NGO cleanings
+                cleaning_batch.delete(doc.reference)
+                cleaning_count += 1
+                
+                if cleaning_count % 500 == 0:
+                    cleaning_batch.commit()
+                    cleaning_batch = db.batch()
+        
+        cleaning_batch.commit()
+        
+        return {"message": f"Cleared {count} user records and {cleaning_count} cleanings"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/clear/ngos")
 async def clear_all_ngos():
-    """Delete all NGOs from database"""
+    """Delete all NGO data from reports and cleanings"""
     try:
-        ngos_ref = db.collection('ngos')
-        batch = db.batch()
         count = 0
         
-        for doc in ngos_ref.stream():
-            batch.delete(doc.reference)
-            count += 1
-            
-            if count % 500 == 0:
-                batch.commit()
-                batch = db.batch()
+        # Delete all NGO reports
+        reports_ref = db.collection('reports')
+        batch = db.batch()
+        
+        for doc in reports_ref.stream():
+            report_data = doc.to_dict()
+            if report_data.get('userType') == 'ngo':
+                batch.delete(doc.reference)
+                count += 1
+                
+                if count % 500 == 0:
+                    batch.commit()
+                    batch = db.batch()
         
         batch.commit()
-        return {"message": f"Cleared {count} NGOs"}
+        
+        # Delete NGO cleanings
+        cleanings_ref = db.collection('cleanings')
+        cleaning_batch = db.batch()
+        cleaning_count = 0
+        
+        for doc in cleanings_ref.stream():
+            cleaning_data = doc.to_dict()
+            if cleaning_data.get('userType') == 'ngo':
+                cleaning_batch.delete(doc.reference)
+                cleaning_count += 1
+                
+                if cleaning_count % 500 == 0:
+                    cleaning_batch.commit()
+                    cleaning_batch = db.batch()
+        
+        cleaning_batch.commit()
+        
+        return {"message": f"Cleared {count} NGO records and {cleaning_count} cleanings"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

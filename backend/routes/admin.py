@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from firebase_admin import firestore
+from firebase_admin import firestore, auth
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 db = firestore.client()
@@ -34,60 +34,41 @@ async def get_all_cleanings():
 
 @router.get("/users")
 async def get_all_users():
-    """Get all unique users from reports and cleanings"""
+    """Get all users from Firebase Authentication"""
     try:
-        users_dict = {}
+        users_list = []
+        page = auth.list_users()
         
-        # Get users from reports
-        reports_ref = db.collection('reports')
-        report_count = 0
-        for doc in reports_ref.stream():
-            report_count += 1
-            report_data = doc.to_dict()
-            user_id = report_data.get('userId')
-            user_name = report_data.get('userName', 'Unknown')
+        while page:
+            for user in page.users:
+                # Get activity counts from Firestore
+                reports_count = 0
+                cleanings_count = 0
+                
+                # Count reports
+                reports_ref = db.collection('reports').where('userId', '==', user.uid)
+                for _ in reports_ref.stream():
+                    reports_count += 1
+                
+                # Count cleanings
+                cleanings_ref = db.collection('cleanings').where('userId', '==', user.uid)
+                for _ in cleanings_ref.stream():
+                    cleanings_count += 1
+                
+                users_list.append({
+                    'id': user.uid,
+                    'name': user.display_name or user.email or 'Unknown',
+                    'email': user.email or '',
+                    'userType': 'individual',  # TODO: store in Firestore if needed
+                    'reportsCount': reports_count,
+                    'cleaningsCount': cleanings_count,
+                    'createdAt': user.user_metadata.creation_timestamp
+                })
             
-            print(f"DEBUG: Report {report_count} - userId={user_id}, userName={user_name}")
-            
-            if user_id and user_id not in users_dict:
-                users_dict[user_id] = {
-                    'id': user_id,
-                    'name': user_name,
-                    'userType': report_data.get('userType', 'individual'),
-                    'reportsCount': 0,
-                    'cleaningsCount': 0,
-                    'email': report_data.get('userEmail', '')
-                }
-            if user_id:
-                users_dict[user_id]['reportsCount'] += 1
+            # Get next page if exists
+            page = page.get_next_page()
         
-        print(f"DEBUG: Total reports found: {report_count}")
-        
-        # Get users from cleanings
-        cleanings_ref = db.collection('cleanings')
-        cleaning_count = 0
-        for doc in cleanings_ref.stream():
-            cleaning_count += 1
-            cleaning_data = doc.to_dict()
-            user_id = cleaning_data.get('userId')
-            user_name = cleaning_data.get('userName', 'Unknown')
-            
-            if user_id and user_id not in users_dict:
-                users_dict[user_id] = {
-                    'id': user_id,
-                    'name': user_name,
-                    'userType': cleaning_data.get('userType', 'individual'),
-                    'reportsCount': 0,
-                    'cleaningsCount': 0,
-                    'email': cleaning_data.get('userEmail', '')
-                }
-            if user_id:
-                users_dict[user_id]['cleaningsCount'] += 1
-        
-        print(f"DEBUG: Total cleanings found: {cleaning_count}")
-        print(f"DEBUG: Total unique users: {len(users_dict)}")
-        
-        return list(users_dict.values())
+        return users_list
     except Exception as e:
         print(f"Error fetching users: {str(e)}")
         return []

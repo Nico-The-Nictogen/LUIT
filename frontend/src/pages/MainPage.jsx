@@ -128,9 +128,9 @@ export default function MainPage() {
         {/* Hero Section */}
         <section className={`text-center mb-10 p-8 rounded-2xl ${
           darkMode 
-            ? 'bg-gradient-to-br from-cyan-900 to-blue-900' 
-            : 'bg-gradient-to-br from-blue-100 to-green-100'
-        } transition-colors animate-slideUp stagger-1`}>
+            ? 'bg-gradient-to-br from-slate-900 to-cyan-900' 
+            : 'bg-gradient-to-br from-blue-100 via-cyan-100 to-green-100'
+        } transition-colors animate-slideUp stagger-1 transform hover:-translate-y-1 hover:shadow-xl`}>
           <h2 className={`text-5xl font-bold mb-4 ${darkMode ? 'text-cyan-300' : 'text-blue-800'} animate-slideInScale`}>
             🌊 Clean Brahmaputra River
           </h2>
@@ -147,8 +147,8 @@ export default function MainPage() {
           onClick={() => navigate('/login')}
           className={`w-full py-5 mb-8 rounded-xl text-white font-bold text-xl transition transform hover:scale-105 active:scale-95 animate-slideUp stagger-2 animate-pulse-glow ${
             darkMode 
-              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700' 
-              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+              ? 'bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-600 hover:to-emerald-700' 
+              : 'bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600'
           }`}
         >
           🚀 Join the Movement
@@ -159,8 +159,8 @@ export default function MainPage() {
           <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-cyan-300' : 'text-gray-800'}`}>
             ✨ Did You Know?
           </h3>
-          <div className={`p-4 rounded-xl mb-4 ${darkMode ? 'bg-slate-700' : 'bg-white shadow-md'} transition-colors transform hover:scale-105 hover:shadow-lg`}>
-            <p className={`text-lg font-semibold ${darkMode ? 'text-cyan-200' : 'text-blue-700'}`}>
+          <div className={`p-4 rounded-xl mb-4 border ${darkMode ? 'bg-slate-700 border-cyan-700' : 'bg-white border-cyan-100 shadow-md'} transition-colors transform hover:scale-105 hover:shadow-xl`}>
+            <p className={`text-lg font-semibold ${darkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
               {facts[Math.floor(Math.random() * facts.length)]}
             </p>
           </div>
@@ -172,8 +172,8 @@ export default function MainPage() {
             onClick={() => navigate('/report')}
             className={`w-full py-4 rounded-xl text-white font-bold text-lg transition transform hover:scale-105 active:scale-95 animate-slideUp stagger-3 ${
               darkMode 
-                ? 'bg-red-700 hover:bg-red-800' 
-                : 'bg-red-500 hover:bg-red-600'
+                ? 'bg-gradient-to-r from-sky-700 to-cyan-700 hover:from-sky-800 hover:to-cyan-800' 
+                : 'bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600'
             }`}
           >
             📸 Report Garbage
@@ -183,8 +183,8 @@ export default function MainPage() {
               onClick={() => navigate('/cleaner')}
               className={`w-full py-4 rounded-xl text-white font-bold text-lg transition transform hover:scale-105 active:scale-95 animate-slideUp stagger-4 ${
                 darkMode 
-                  ? 'bg-green-700 hover:bg-green-800' 
-                  : 'bg-green-500 hover:bg-green-600'
+                  ? 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800' 
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'
               }`}
             >
               🧹 Join Cleanup
@@ -194,8 +194,8 @@ export default function MainPage() {
             onClick={() => navigate('/leaderboard')}
             className={`w-full py-4 rounded-xl text-white font-bold text-lg transition transform hover:scale-105 active:scale-95 animate-slideUp stagger-4 ${
               darkMode 
-                ? 'bg-purple-700 hover:bg-purple-800' 
-                : 'bg-purple-500 hover:bg-purple-600'
+                ? 'bg-gradient-to-r from-blue-700 to-cyan-700 hover:from-blue-800 hover:to-cyan-800' 
+                : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
             }`}
           >
             🏆 Leaderboard
@@ -204,16 +204,16 @@ export default function MainPage() {
 
         {/* Analytics */}
         <section className={`rounded-xl shadow-md p-6 grid grid-cols-2 gap-4 mb-8 ${
-          darkMode ? 'bg-slate-700' : 'bg-white'
-        } transition-colors animate-slideUp stagger-5`}>
+          darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-700' : 'bg-gradient-to-br from-white to-blue-50'
+        } transition-colors animate-slideUp stagger-5 transform hover:-translate-y-1 hover:shadow-xl`}>
           <div className="text-center transform hover:scale-110 transition">
-            <p className={`text-3xl font-bold ${darkMode ? 'text-cyan-300' : 'text-blue-600'}`}>
+            <p className={`text-3xl font-bold ${darkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
               {analytics.totalReports.toLocaleString()}
             </p>
             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Places Reported</p>
           </div>
           <div className="text-center transform hover:scale-110 transition">
-            <p className={`text-3xl font-bold ${darkMode ? 'text-green-300' : 'text-green-600'}`}>
+            <p className={`text-3xl font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
               {analytics.totalCleanings.toLocaleString()}
             </p>
             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Places Cleaned</p>
@@ -226,22 +226,22 @@ export default function MainPage() {
             How It Works
           </h3>
           <div className="space-y-4">
-            <div className={`flex gap-4 p-4 rounded-xl ${darkMode ? 'bg-slate-700' : 'bg-white shadow-md'} transition-colors transform hover:scale-105 hover:shadow-lg animate-slideUp stagger-3`}>
-              <div className={`flex-shrink-0 w-10 h-10 ${darkMode ? 'bg-cyan-600' : 'bg-blue-600'} text-white rounded-full flex items-center justify-center font-bold text-lg animate-bounce-gentle`}>1</div>
+            <div className={`flex gap-4 p-4 rounded-xl border ${darkMode ? 'bg-slate-700 border-cyan-700' : 'bg-white border-cyan-100 shadow-md'} transition-colors transform hover:scale-105 hover:-translate-y-1 hover:shadow-xl animate-slideUp stagger-3`}>
+              <div className={`flex-shrink-0 w-10 h-10 ${darkMode ? 'bg-cyan-600' : 'bg-cyan-600'} text-white rounded-full flex items-center justify-center font-bold text-lg animate-bounce-gentle`}>1</div>
               <div>
                 <p className={`font-semibold ${darkMode ? 'text-cyan-200' : 'text-gray-800'}`}>Report Garbage</p>
                 <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Spot garbage? Take a photo and report it to your location</p>
               </div>
             </div>
-            <div className={`flex gap-4 p-4 rounded-xl ${darkMode ? 'bg-slate-700' : 'bg-white shadow-md'} transition-colors transform hover:scale-105 hover:shadow-lg animate-slideUp stagger-4`}>
-              <div className={`flex-shrink-0 w-10 h-10 ${darkMode ? 'bg-cyan-600' : 'bg-blue-600'} text-white rounded-full flex items-center justify-center font-bold text-lg animate-bounce-gentle`}>2</div>
+            <div className={`flex gap-4 p-4 rounded-xl border ${darkMode ? 'bg-slate-700 border-cyan-700' : 'bg-white border-cyan-100 shadow-md'} transition-colors transform hover:scale-105 hover:-translate-y-1 hover:shadow-xl animate-slideUp stagger-4`}>
+              <div className={`flex-shrink-0 w-10 h-10 ${darkMode ? 'bg-cyan-600' : 'bg-cyan-600'} text-white rounded-full flex items-center justify-center font-bold text-lg animate-bounce-gentle`}>2</div>
               <div>
                 <p className={`font-semibold ${darkMode ? 'text-cyan-200' : 'text-gray-800'}`}>Join Cleanup</p>
                 <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>See reported areas and volunteer to clean them</p>
               </div>
             </div>
-            <div className={`flex gap-4 p-4 rounded-xl ${darkMode ? 'bg-slate-700' : 'bg-white shadow-md'} transition-colors transform hover:scale-105 hover:shadow-lg animate-slideUp stagger-5`}>
-              <div className={`flex-shrink-0 w-10 h-10 ${darkMode ? 'bg-cyan-600' : 'bg-blue-600'} text-white rounded-full flex items-center justify-center font-bold text-lg animate-bounce-gentle`}>3</div>
+            <div className={`flex gap-4 p-4 rounded-xl border ${darkMode ? 'bg-slate-700 border-cyan-700' : 'bg-white border-cyan-100 shadow-md'} transition-colors transform hover:scale-105 hover:-translate-y-1 hover:shadow-xl animate-slideUp stagger-5`}>
+              <div className={`flex-shrink-0 w-10 h-10 ${darkMode ? 'bg-cyan-600' : 'bg-cyan-600'} text-white rounded-full flex items-center justify-center font-bold text-lg animate-bounce-gentle`}>3</div>
               <div>
                 <p className={`font-semibold ${darkMode ? 'text-cyan-200' : 'text-gray-800'}`}>Earn Points</p>
                 <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Get rewarded with points and climb the leaderboard</p>

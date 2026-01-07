@@ -11,6 +11,15 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 app = FastAPI(title="LUIT Backend", version="1.0.0")
+ 
+# Initialize Firebase Admin SDK before importing any routes that use Firestore/Auth
+try:
+    from services.firebase_service import init_firebase
+    init_firebase()
+    logger.info("✅ Firebase Admin SDK initialized")
+except Exception as e:
+    logger.error(f"❌ Firebase initialization failed: {e}")
+    # Proceeding allows health endpoint to work; Firestore routes will raise until fixed
 
 # CORS Configuration - Allow specific origins
 allowed_origins = [

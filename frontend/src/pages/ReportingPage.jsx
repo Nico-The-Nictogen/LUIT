@@ -273,7 +273,7 @@ export default function ReportingPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors ${
+    <div className={`min-h-screen flex flex-col transition-colors ${
       darkMode 
         ? 'bg-gradient-to-b from-slate-900 to-cyan-900' 
         : 'bg-gradient-to-b from-blue-50 to-green-50'
@@ -316,7 +316,7 @@ export default function ReportingPage() {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-6">
+      <main className="flex-1 max-w-md mx-auto px-4 py-6 w-full">
         {/* Location Status */}
         <div className={`p-4 rounded-lg mb-4 border-2 transition ${
           locationConflict?.isDuplicate 

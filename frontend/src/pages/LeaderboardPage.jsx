@@ -56,7 +56,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors ${
+    <div className={`min-h-screen flex flex-col transition-colors ${
       darkMode 
         ? 'bg-gradient-to-b from-slate-900 to-cyan-900' 
         : 'bg-gradient-to-b from-blue-50 to-green-50'
@@ -99,7 +99,7 @@ export default function LeaderboardPage() {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-4">
+      <main className="flex-1 max-w-md mx-auto px-4 py-4 w-full">
         {/* Category Toggle - Only show for non-logged-in users */}
         {!user && (
           <div className={`flex gap-2 mb-4 p-1 rounded-lg ${

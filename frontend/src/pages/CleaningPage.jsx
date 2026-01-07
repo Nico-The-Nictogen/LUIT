@@ -298,10 +298,10 @@ export default function CleaningPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors ${
+    <div className={`min-h-screen flex flex-col transition-colors ${
       darkMode 
         ? 'bg-gradient-to-b from-slate-900 to-cyan-900' 
-        : 'bg-gradient-to-b from-green-50 to-blue-50'
+        : 'bg-gradient-to-b from-blue-50 to-green-50'
     }`}>
       <header className={`sticky top-0 z-40 border-b transition-colors ${
         darkMode ? 'bg-slate-800 border-cyan-700' : 'bg-white border-cyan-200 shadow-sm'
@@ -341,7 +341,7 @@ export default function CleaningPage() {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-6 pb-12">
+      <main className="flex-1 max-w-md mx-auto px-4 py-6 pb-12 w-full">
         {error && (
           <div className={`border p-4 rounded-lg mb-4 ${
             darkMode ? 'bg-red-900 border-red-700 text-red-200' : 'bg-red-50 border-red-200 text-red-700'

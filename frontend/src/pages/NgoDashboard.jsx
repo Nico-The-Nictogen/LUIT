@@ -22,7 +22,7 @@ export default function NgoDashboard() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors ${
+    <div className={`min-h-screen flex flex-col transition-colors ${
       darkMode 
         ? 'bg-gradient-to-b from-slate-900 to-cyan-900' 
         : 'bg-gradient-to-b from-blue-50 to-green-50'
@@ -52,7 +52,7 @@ export default function NgoDashboard() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
         {/* Welcome Section */}
         <section className={`mb-8 p-6 rounded-xl border ${
           darkMode ? 'bg-slate-800 border-cyan-700' : 'bg-white border-cyan-200 shadow-md'

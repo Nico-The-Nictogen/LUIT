@@ -44,7 +44,7 @@ export default function CleanerPage() {
   if (userType === 'ngo') wasteTypes.push('sewage')
 
   return (
-    <div className={`min-h-screen transition-colors ${
+    <div className={`min-h-screen flex flex-col transition-colors ${
       darkMode 
         ? 'bg-gradient-to-b from-slate-900 to-cyan-900' 
         : 'bg-gradient-to-b from-blue-50 to-green-50'
@@ -87,7 +87,7 @@ export default function CleanerPage() {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-4">
+      <main className="flex-1 max-w-md mx-auto px-4 py-4 w-full">
         {/* Waste Type Tabs */}
         <div className="flex overflow-x-auto gap-2 mb-4 pb-2 -mx-4 px-4">
           {wasteTypes.map(type => (

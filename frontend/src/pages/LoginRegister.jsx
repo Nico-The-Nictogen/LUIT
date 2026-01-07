@@ -135,11 +135,13 @@ export default function LoginRegister() {
         )}
 
         {/* User Type Toggle */}
-        <div className="grid grid-cols-3 gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
+        <div className={`grid grid-cols-3 gap-2 mb-6 p-1 rounded-lg ${darkMode ? 'bg-slate-700' : 'bg-gray-100'}`}>
           <button
             onClick={() => setUserTypeLocal('individual')}
             className={`py-2 text-sm rounded-md font-semibold transition ${
-              userType === 'individual' ? 'bg-green-600 text-white' : 'text-gray-600'
+              userType === 'individual' 
+                ? darkMode ? 'bg-emerald-600 text-white' : 'bg-green-600 text-white'
+                : darkMode ? 'text-gray-300' : 'text-gray-600'
             }`}
           >
             Individual
@@ -147,7 +149,9 @@ export default function LoginRegister() {
           <button
             onClick={() => setUserTypeLocal('ngo')}
             className={`py-2 text-sm rounded-md font-semibold transition ${
-              userType === 'ngo' ? 'bg-green-600 text-white' : 'text-gray-600'
+              userType === 'ngo' 
+                ? darkMode ? 'bg-emerald-600 text-white' : 'bg-green-600 text-white'
+                : darkMode ? 'text-gray-300' : 'text-gray-600'
             }`}
           >
             NGO
@@ -155,7 +159,7 @@ export default function LoginRegister() {
           <button
             onClick={() => setUserTypeLocal('admin')}
             className={`py-2 text-sm rounded-md font-semibold transition ${
-              userType === 'admin' ? 'bg-red-600 text-white' : 'text-gray-600'
+              userType === 'admin' ? 'bg-red-600 text-white' : darkMode ? 'text-gray-300' : 'text-gray-600'
             }`}
           >
             Admin
@@ -166,8 +170,8 @@ export default function LoginRegister() {
         {error && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${
             error.includes('successful') 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-red-100 text-red-700'
+              ? darkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-700'
+              : darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'
           }`}>
             {error}
           </div>
@@ -184,7 +188,9 @@ export default function LoginRegister() {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 ${
+                darkMode ? 'bg-slate-700 border-cyan-700 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+              }`}
             />
           ) : (
             <>
@@ -196,7 +202,11 @@ export default function LoginRegister() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    darkMode 
+                      ? 'bg-slate-700 border-cyan-700 text-white placeholder-gray-400 focus:ring-cyan-600' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-600'
+                  }`}
                 />
               )}
 
@@ -208,7 +218,11 @@ export default function LoginRegister() {
                   value={formData.ngoName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    darkMode 
+                      ? 'bg-slate-700 border-cyan-700 text-white placeholder-gray-400 focus:ring-cyan-600' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-600'
+                  }`}
                 />
               )}
 
@@ -220,7 +234,11 @@ export default function LoginRegister() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  darkMode 
+                    ? 'bg-slate-700 border-cyan-700 text-white placeholder-gray-400 focus:ring-cyan-600' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-600'
+                }`}
               />
 
               <input
@@ -230,7 +248,11 @@ export default function LoginRegister() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  darkMode 
+                    ? 'bg-slate-700 border-cyan-700 text-white placeholder-gray-400 focus:ring-cyan-600' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-600'
+                }`}
               />
             </>
           )}
@@ -238,7 +260,13 @@ export default function LoginRegister() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 ${userType === 'admin' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} disabled:bg-gray-400 text-white font-bold rounded-lg transition`}
+            className={`w-full py-3 text-white font-bold rounded-lg transition ${
+              userType === 'admin' 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : darkMode 
+                  ? 'bg-cyan-600 hover:bg-cyan-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+            } disabled:bg-gray-400`}
           >
             {loading ? 'Processing...' : userType === 'admin' ? 'Access Admin Panel' : isLogin ? 'Login' : 'Register'}
           </button>
@@ -247,10 +275,25 @@ export default function LoginRegister() {
         {/* Back to main */}
         <button
           onClick={() => navigate('/')}
-          className="w-full mt-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+          className={`w-full mt-4 py-2 text-sm transition ${
+            darkMode ? 'text-gray-400 hover:text-cyan-300' : 'text-gray-600 hover:text-blue-600'
+          }`}
         >
           Back to Home
         </button>
+
+        {/* Footer */}
+        <div className={`mt-6 pt-4 border-t text-center ${
+          darkMode ? 'border-slate-700' : 'border-gray-200'
+        }`}>
+          <p className={`text-xs ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            Made with 💙 by <span className={`font-bold ${
+              darkMode ? 'text-cyan-400' : 'text-blue-600'
+            }`}>LuitLabs</span>
+          </p>
+        </div>
       </div>
     </div>
   )

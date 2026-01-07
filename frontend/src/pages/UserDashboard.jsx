@@ -34,7 +34,9 @@ export default function UserDashboard() {
   // Persist dark mode to localStorage
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode))
-  }, [darkMode])  const fetchUserAnalytics = async () => {
+  }, [darkMode])
+
+  const fetchUserAnalytics = async () => {
     try {
       const response = await analyticsApi.getUserAnalytics(user.id)
       setAnalytics(response.data)

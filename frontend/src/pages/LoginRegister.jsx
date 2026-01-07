@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store'
 import { authApi } from '../api'
@@ -12,6 +12,10 @@ export default function LoginRegister() {
   const [userType, setUserTypeLocal] = useState('individual')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode')
+    return saved ? JSON.parse(saved) : false
+  })
 
   const [formData, setFormData] = useState({
     name: '',
@@ -19,6 +23,11 @@ export default function LoginRegister() {
     password: '',
     ngoName: ''
   })
+
+  // Persist dark mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode))
+  }, [darkMode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -71,18 +80,43 @@ export default function LoginRegister() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-blue-600 text-center mb-6">LUIT</h1>
+    <div className={`min-h-screen flex items-center justify-center px-4 py-8 transition-colors ${
+      darkMode 
+        ? 'bg-gradient-to-b from-slate-900 to-cyan-900' 
+        : 'bg-gradient-to-b from-blue-50 to-green-50'
+    }`}>
+      <div className={`w-full max-w-sm rounded-lg shadow-lg p-6 border ${
+        darkMode 
+          ? 'bg-slate-800 border-cyan-700' 
+          : 'bg-white border-cyan-200'
+      }`}>
+        {/* Header with dark mode toggle */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-3xl">💧</span>
+            <h1 className={`text-2xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>LUIT</h1>
+          </div>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`px-2 py-1 rounded-md text-sm transition transform hover:scale-110 ${
+              darkMode 
+                ? 'bg-slate-700 text-yellow-300 hover:bg-slate-600' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
 
         {/* Toggle - Hide for admin */}
         {userType !== 'admin' && (
-          <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
+          <div className={`flex gap-2 mb-6 p-1 rounded-lg ${darkMode ? 'bg-slate-700' : 'bg-gray-100'}`}>
             <button
               onClick={() => { setIsLogin(true); setError('') }}
               className={`flex-1 py-2 rounded-md font-semibold transition ${
-                isLogin ? 'bg-blue-600 text-white' : 'text-gray-600'
+                isLogin 
+                  ? darkMode ? 'bg-cyan-600 text-white' : 'bg-blue-600 text-white'
+                  : darkMode ? 'text-gray-300' : 'text-gray-600'
               }`}
             >
               Login
@@ -90,7 +124,9 @@ export default function LoginRegister() {
             <button
               onClick={() => { setIsLogin(false); setError('') }}
               className={`flex-1 py-2 rounded-md font-semibold transition ${
-                !isLogin ? 'bg-blue-600 text-white' : 'text-gray-600'
+                !isLogin 
+                  ? darkMode ? 'bg-cyan-600 text-white' : 'bg-blue-600 text-white'
+                  : darkMode ? 'text-gray-300' : 'text-gray-600'
               }`}
             >
               Register

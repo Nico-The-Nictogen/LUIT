@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from typing import Literal
+from typing import Literal, Optional
 from firebase_admin import auth, firestore
 import requests
 import os
@@ -15,10 +15,10 @@ FIREBASE_LOGIN_ENDPOINT = f"https://identitytoolkit.googleapis.com/v1/accounts:s
 
 class RegisterRequest(BaseModel):
     userType: Literal["individual", "ngo"]
-    name: str
+    name: Optional[str] = None
     email: EmailStr
     password: str
-    ngoName: str = None
+    ngoName: Optional[str] = None
 
 class LoginRequest(BaseModel):
     userType: Literal["individual", "ngo"]
@@ -29,6 +29,11 @@ class LoginRequest(BaseModel):
 async def register(request: RegisterRequest):
     """Register new user or NGO with Firebase Auth"""
     try:
+        if request.userType == "individual" and not request.name:
+            raise HTTPException(status_code=400, detail="Name is required for individual registration")
+        if request.userType == "ngo" and not request.ngoName:
+            raise HTTPException(status_code=400, detail="NGO name is required for NGO registration")
+
         # Create user in Firebase Auth via REST API
         payload = {
             "email": request.email,
@@ -48,13 +53,15 @@ async def register(request: RegisterRequest):
         
         # Set custom claims for userType
         auth.set_custom_user_claims(user_id, {'userType': request.userType})
+
+        display_name = request.name if request.userType == 'individual' else request.ngoName
         
         # Store user profile in Firestore
         user_data = {
             'userId': user_id,
             'email': request.email,
             'userType': request.userType,
-            'name': request.name if request.userType == 'individual' else request.ngoName,
+            'name': display_name,
             'createdAt': firestore.SERVER_TIMESTAMP
         }
         

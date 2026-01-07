@@ -110,7 +110,7 @@ export default function UserDashboard() {
       <header className={`${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border-b shadow-sm sticky top-0 z-40 transition-colors animate-slideDown`}>
         <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 animate-bounce-gentle">
-            <span className="text-3xl">🌍</span>
+            <span className="text-4xl">💧</span>
             <div>
               <h1 className={`text-2xl font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>LUIT</h1>
               <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Welcome, {user?.name}</p>

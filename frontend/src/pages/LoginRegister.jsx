@@ -45,10 +45,11 @@ export default function LoginRegister() {
       if (isLogin) {
         const response = await authApi.login({
           userType,
-          identifier: userType === 'individual' ? formData.name : formData.ngoName,
+          identifier: formData.email,
           password: formData.password
         })
-        setUser({ id: 'user_id', name: formData.name })
+        const data = response?.data || {}
+        setUser({ id: data.userId || 'user_id', name: data.name || formData.name || formData.ngoName || 'User', email: data.email || formData.email })
         setUserType(userType)
         navigate('/dashboard')
       } else {
@@ -175,41 +176,16 @@ export default function LoginRegister() {
                 />
               )}
 
-              {isLogin && userType === 'individual' && (
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Full Name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              )}
-
-              {isLogin && userType === 'ngo' && (
-                <input
-                  type="text"
-                  name="ngoName"
-                  placeholder="NGO Name"
-                  value={formData.ngoName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              )}
-
-              {!isLogin && (
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email Address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              )}
+              {/* Email for both Login and Register */}
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
 
               <input
                 type="password"

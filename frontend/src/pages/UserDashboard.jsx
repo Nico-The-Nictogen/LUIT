@@ -49,7 +49,6 @@ export default function UserDashboard() {
         const userRank = userRankIndex !== -1 ? userRankIndex + 1 : '-'
         
         setAnalytics(prev => ({ ...prev, userRank }))
-        console.log(`User rank: ${userRank}`)
       } catch (err) {
         console.error('Failed to fetch user rank:', err)
       }

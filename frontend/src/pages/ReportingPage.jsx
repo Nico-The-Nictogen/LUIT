@@ -83,7 +83,6 @@ export default function ReportingPage() {
               }
 
               if (validated.length > 0) {
-                console.warn('⚠️ Location conflict detected (validated):', validated)
                 const closest = validated.reduce((min, r) => (r.distance < min ? r.distance : min), validated[0].distance)
                 setLocationConflict({
                   isDuplicate: true,
@@ -95,14 +94,11 @@ export default function ReportingPage() {
               } else {
                 setLocationConflict(null)
                 setError('')
-                console.log('✅ Location is clear after validation')
               }
             } else {
               setLocationConflict(null)
-              console.log('✅ Location is clear')
             }
           } catch (err) {
-            console.warn('Could not check location conflict:', err)
             setLocationConflict(null)
           }
           
@@ -205,8 +201,6 @@ export default function ReportingPage() {
         quality -= 0.1
         imageData = canvas.toDataURL('image/jpeg', quality)
       }
-      
-      console.log(`📷 Image captured: ${(imageData.length / 1024).toFixed(2)} KB`)
 
       setImage(imageData)
       // Turn off camera immediately after capture to free device
@@ -218,9 +212,7 @@ export default function ReportingPage() {
 
       // Step 1: Verify image (AI)
       try {
-        console.log('🔍 Verifying image...')
         const verifyResult = await reportingApi.verifyImage(imageData)
-        console.log('✅ Verification result:', verifyResult.data)
         setVerification(verifyResult.data)
 
         if (!verifyResult.data.is_garbage) {
@@ -229,7 +221,6 @@ export default function ReportingPage() {
           return
         }
       } catch (verifyErr) {
-        console.error('❌ Verification error:', verifyErr)
         setError('Error verifying image: ' + (verifyErr.response?.data?.detail || verifyErr.message))
         setVerification(null)
         setVerifying(false)
@@ -238,18 +229,11 @@ export default function ReportingPage() {
 
       // Step 2: Upload image to Cloudinary
       try {
-        console.log('📤 Uploading image to Cloudinary...')
-        console.log('Base64 length:', imageData.length)
-        console.log('First 100 chars:', imageData.substring(0, 100))
-        
         const uploadResult = await reportingApi.uploadImage(imageData)
-        console.log('✅ Upload successful:', uploadResult.data)
         
         setCloudinaryUrl(uploadResult.data.url)
         setCloudinaryPublicId(uploadResult.data.public_id)
       } catch (uploadErr) {
-        console.error('❌ Upload error:', uploadErr)
-        console.error('Error response:', uploadErr.response?.data)
         setError('Error uploading image: ' + (uploadErr.response?.data?.detail || uploadErr.message))
         setVerification(null)
         setCloudinaryUrl(null)

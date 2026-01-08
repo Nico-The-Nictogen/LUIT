@@ -56,7 +56,6 @@ export default function NgoDashboard() {
         const ngoRank = ngoRankIndex !== -1 ? ngoRankIndex + 1 : '-'
         
         setAnalytics(prev => ({ ...prev, ngoRank }))
-        console.log(`NGO rank: ${ngoRank}`)
       } catch (err) {
         console.error('Failed to fetch NGO rank:', err)
       }

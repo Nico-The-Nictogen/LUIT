@@ -41,7 +41,6 @@ export default function CleanerPage() {
   if (userType === 'ngo') wasteTypes.push('sewage')
 
     const handleCleanClick = (reportId) => {
-      console.log('🔧 Clean button clicked, navigating to report:', reportId)
       navigate(`/cleaning/${reportId}`)
     }
 

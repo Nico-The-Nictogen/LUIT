@@ -76,8 +76,6 @@ export default function CleaningPage() {
       const withinRange = dist <= 150
       setIsWithinRange(withinRange)
       
-      console.log(`📍 Distance to cleanup: ${dist.toFixed(1)}m - ${withinRange ? '✅ In range' : '❌ Out of range'}`)
-      
       if (!withinRange) {
         setError(`⚠️ You are ${dist.toFixed(0)}m away. Get closer to the location (within 150m) to start cleaning.`)
       }
@@ -86,19 +84,13 @@ export default function CleaningPage() {
 
   const fetchReport = async () => {
     try {
-      console.log(`📡 Fetching report: ${reportId}`)
       const response = await reportingApi.getReport(reportId)
-      console.log(`📦 Full API Response:`, response)
-      console.log(`📦 response.data:`, response.data)
       
       // Backend returns { success: true, report: {...} }
       const reportData = response.data?.report
-      console.log(`📋 Report data:`, reportData)
       
       // Check if report exists and has required data; if not, navigate back silently
       if (!reportData || !reportData.id) {
-        console.warn(`⚠️ Report ${reportId} not found or missing ID, redirecting to cleaner`)
-        console.warn(`reportData:`, reportData)
         setReport(null)
         navigate('/cleaner')
         return
@@ -109,12 +101,9 @@ export default function CleaningPage() {
       
       // Check if image URL is valid; if not, navigate back silently
       if (!reportData.imageUrl) {
-        console.warn(`⚠️ Report ${reportId} missing imageUrl, redirecting to cleaner`)
         navigate('/cleaner')
         return
       }
-      
-      console.log(`✅ Report loaded successfully`)
       
       // Convert image URL to base64
       try {
@@ -128,15 +117,12 @@ export default function CleaningPage() {
           ctx.drawImage(img, 0, 0)
           const base64 = canvas.toDataURL('image/jpeg', 0.8)
           setBeforeImageBase64(base64)
-          console.log('✅ Before image converted to base64')
         }
         img.onerror = () => {
-          console.warn('⚠️ Could not load image for conversion, will use URL')
           setBeforeImageBase64(reportData.imageUrl)
         }
         img.src = reportData.imageUrl
       } catch (err) {
-        console.warn('⚠️ Could not convert image to base64:', err)
         setBeforeImageBase64(reportData.imageUrl)
       }
     } catch (err) {
@@ -156,12 +142,10 @@ export default function CleaningPage() {
           setLocation(userLat, userLon, position.coords.accuracy)
           setLocationLoading(false)
           setError('')
-          console.log(`📍 Location obtained: ${userLat.toFixed(4)}, ${userLon.toFixed(4)}`)
         },
         (err) => {
           setError('Failed to get location. Please enable GPS.')
           setLocationLoading(false)
-          console.error('Geolocation error:', err)
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       )
@@ -247,8 +231,6 @@ export default function CleaningPage() {
         imageData = canvas.toDataURL('image/jpeg', quality)
       }
       
-      console.log(`📷 After image captured: ${(imageData.length / 1024).toFixed(2)} KB`)
-      
       setAfterImage(imageData)
       setError('')
       setVerifying(true)
@@ -256,7 +238,6 @@ export default function CleaningPage() {
 
       // Verify by comparing before and after images
       try {
-        console.log('🔍 Verifying cleanup...')
         const verifyResult = await cleaningApi.verifyCleaning({
           reportId,
           beforeImageBase64: beforeImageBase64 || beforeImage,
@@ -265,7 +246,6 @@ export default function CleaningPage() {
           userName: user?.name || 'Anonymous',
           userType
         })
-        console.log('✅ Verification result:', verifyResult.data)
         setVerification(verifyResult.data)
 
         if (!verifyResult.data.is_cleaned) {
@@ -275,7 +255,6 @@ export default function CleaningPage() {
           return
         }
       } catch (verifyErr) {
-        console.error('❌ Verification error:', verifyErr)
         setError('Error verifying cleanup: ' + (verifyErr.response?.data?.detail || verifyErr.message))
         setVerification(null)
         setVerifying(false)
@@ -285,7 +264,6 @@ export default function CleaningPage() {
       
       setVerifying(false)
     } catch (err) {
-      console.error('❌ Capture error:', err)
       setError('Failed to capture image. Please try again.')
     }
   }
@@ -300,13 +278,11 @@ export default function CleaningPage() {
       return
     }
     if (loading) {
-      console.warn('⚠️ Submission already in progress')
       return
     }
 
     setLoading(true)
     try {
-      console.log('📤 Marking area as cleaned...')
       const result = await cleaningApi.markCleaned({
         reportId,
         beforeImageBase64: beforeImageBase64 || beforeImage,
@@ -315,10 +291,8 @@ export default function CleaningPage() {
         userName: user?.name || 'Anonymous',
         userType
       })
-      console.log('✅ Success:', result.data)
       navigate('/cleaner')
     } catch (err) {
-      console.error('❌ Submit error:', err)
       setError('Error submitting cleanup: ' + (err.response?.data?.detail || err.message))
       setLoading(false)
     }

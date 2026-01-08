@@ -206,7 +206,6 @@ async def get_users_leaderboard(category: str = "reporting", limit: int = 20):
         
         return {"leaderboard": leaderboard}
     except Exception as e:
-        print(f"Error getting leaderboard: {str(e)}")
         return {"leaderboard": []}
 
 @router.get("/leaderboard/ngos")
@@ -285,7 +284,6 @@ async def get_ngos_leaderboard(category: str = "reporting", limit: int = 20):
         
         return {"leaderboard": leaderboard}
     except Exception as e:
-        print(f"Error getting NGO leaderboard: {str(e)}")
         return {"leaderboard": []}
 
 @router.get("/time-buckets")
@@ -354,7 +352,6 @@ async def get_time_buckets():
             'cleanings': { 'week': c_w, 'month': c_m, 'year': c_y }
         }
     except Exception as e:
-        print(f"Error computing time buckets: {str(e)}")
         return {
             'reports': { 'week': 0, 'month': 0, 'year': 0 },
             'cleanings': { 'week': 0, 'month': 0, 'year': 0 }

@@ -36,14 +36,10 @@ async def upload_image(request: UploadImageRequest):
         if not request.image_base64:
             raise ValueError("No image data provided")
         
-        print(f"📤 Uploading image to Cloudinary... (size: {len(request.image_base64) / 1024:.2f} KB)")
-        
         result = await upload_image_to_cloudinary(request.image_base64, folder="luit/reports")
         
         if not result['success']:
             raise ValueError(result['message'])
-        
-        print(f"✅ Upload complete: {result['url']}")
         
         return {
             "success": True,
@@ -52,7 +48,6 @@ async def upload_image(request: UploadImageRequest):
             "message": "Image uploaded successfully"
         }
     except Exception as e:
-        print(f"❌ Upload error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Upload failed: {str(e)}")
 
 @router.post("/delete-image")
@@ -61,21 +56,16 @@ async def delete_image(request: DeleteImageRequest):
     try:
         from services.cloudinary_service import delete_image_from_cloudinary
         
-        print(f"🗑️  Deleting image: {request.public_id}")
-        
         result = await delete_image_from_cloudinary(request.public_id)
         
         if not result['success']:
             raise ValueError(result['message'])
-        
-        print(f"✅ Image deleted: {request.public_id}")
         
         return {
             "success": True,
             "message": "Image deleted successfully"
         }
     except Exception as e:
-        print(f"⚠️  Delete error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Delete failed: {str(e)}")
 
 @router.post("/verify-image")
@@ -85,15 +75,10 @@ async def verify_image(request: VerifyImageRequest):
         if not request.image_base64:
             raise ValueError("No image data provided")
         
-        print(f"📷 Verifying image... (size: {len(request.image_base64) / 1024:.2f} KB)")
-        
         result = await verify_garbage_image(request.image_base64)
-        
-        print(f"✅ Verification complete: is_garbage={result['is_garbage']}")
         
         return result
     except Exception as e:
-        print(f"❌ Verification error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Image verification failed: {str(e)}")
 
 @router.post("/check-location")

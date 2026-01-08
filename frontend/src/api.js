@@ -13,30 +13,22 @@ export const api = axios.create({
   timeout: 30000  // 30 second timeout for large image uploads
 })
 
-// Add request interceptor for debugging
+// Add request interceptor
 api.interceptors.request.use(
   config => {
-    console.log(`📡 API Request: ${config.method.toUpperCase()} ${config.baseURL}${config.url}`)
     return config
   },
   error => {
-    console.error('❌ Request Error:', error)
     return Promise.reject(error)
   }
 )
 
-// Add response interceptor for debugging
+// Add response interceptor
 api.interceptors.response.use(
   response => {
-    console.log(`✅ API Response: ${response.status} ${response.statusText}`)
     return response
   },
   error => {
-    console.error('❌ Response Error:', error.message)
-    if (error.response) {
-      console.error('Status:', error.response.status)
-      console.error('Data:', error.response.data)
-    }
     return Promise.reject(error)
   }
 )

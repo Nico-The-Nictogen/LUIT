@@ -61,7 +61,6 @@ async def get_all_users():
 
         return users_list
     except Exception as e:
-        print(f"Error fetching users: {str(e)}")
         return []
 
 @router.get("/ngos")
@@ -88,7 +87,6 @@ async def get_all_ngos():
 
         return ngos_list
     except Exception as e:
-        print(f"Error fetching NGOs: {str(e)}")
         return []
 
 @router.delete("/clear/reports")
@@ -109,7 +107,7 @@ async def clear_all_reports():
                 try:
                     await delete_image_from_cloudinary(public_id)
                 except Exception as img_err:
-                    print(f"⚠️  Could not delete image {public_id}: {str(img_err)}")
+                    logger.warning(f"Could not delete image {public_id}: {str(img_err)}")
             
             batch.delete(doc.reference)
             count += 1
@@ -216,7 +214,7 @@ async def clear_all_users():
                     try:
                         await delete_image_from_cloudinary(public_id)
                     except Exception as img_err:
-                        print(f"⚠️  Could not delete image {public_id}: {str(img_err)}")
+                        logger.warning(f"Could not delete image {public_id}: {str(img_err)}")
                 
                 reports_batch.delete(doc.reference)
                 reports_count += 1
@@ -271,7 +269,7 @@ async def clear_all_ngos():
                     try:
                         await delete_image_from_cloudinary(public_id)
                     except Exception as img_err:
-                        print(f"⚠️  Could not delete image {public_id}: {str(img_err)}")
+                        logger.warning(f"Could not delete image {public_id}: {str(img_err)}")
                 
                 batch.delete(doc.reference)
                 count += 1
@@ -317,11 +315,9 @@ async def delete_report(report_id: str):
             if public_id:
                 try:
                     from services.cloudinary_service import delete_image_from_cloudinary
-                    print(f"🗑️  Deleting image with public_id: {public_id}")
                     await delete_image_from_cloudinary(public_id)
-                    print(f"✅ Image deleted successfully")
                 except Exception as img_err:
-                    print(f"⚠️  Could not delete image: {str(img_err)}")
+                    logger.warning(f"Could not delete image: {str(img_err)}")
                     # Continue with report deletion even if image delete fails
         
         # Delete the report from Firestore

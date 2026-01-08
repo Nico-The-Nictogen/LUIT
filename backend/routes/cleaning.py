@@ -41,8 +41,6 @@ async def mark_cleaned(request: CleaningRequest):
         if not report:
             return {"success": False, "message": "Report not found"}
         
-        logger.info(f"📋 Report data: imagePublicId={report.get('imagePublicId')}, imageUrl={report.get('imageUrl')}")
-        
         # Delete before image from Cloudinary if it exists
         image_public_id = report.get('imagePublicId')
         
@@ -182,7 +180,6 @@ async def get_available_cleanings(wasteType: str = None, userType: str = None, u
         
         return {"success": True, "cleanings": cleanings}
     except Exception as e:
-        print(f"Error fetching cleanings: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 def get_points_for_waste_type(waste_type: str) -> int:

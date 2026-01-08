@@ -77,8 +77,6 @@ async def register(request: RegisterRequest):
         
         db.collection('users').document(user_id).set(user_data)
         
-        print(f"✅ User registered: {user_id} ({request.userType})")
-        
         return {
             "message": "Registration successful",
             "userType": request.userType,
@@ -87,7 +85,6 @@ async def register(request: RegisterRequest):
             "email": request.email
         }
     except Exception as e:
-        print(f"❌ Registration error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Registration failed: {str(e)}")
 
 @router.post("/login")
@@ -133,8 +130,6 @@ async def login(request: LoginRequest):
         except Exception:
             pass
         
-        print(f"✅ User logged in: {user_id} ({stored_user_type})")
-        
         return {
             "message": "Login successful",
             "userType": stored_user_type or request.userType,
@@ -144,7 +139,6 @@ async def login(request: LoginRequest):
             "name": user_data.get('name', '')
         }
     except Exception as e:
-        print(f"❌ Login error: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Login failed: {str(e)}")
 
 @router.post("/logout")

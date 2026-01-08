@@ -250,6 +250,12 @@ export default function NgoDashboard() {
             >
               Log a Report
             </button>
+            <button
+              onClick={() => navigate('/analytics')}
+              className={`${darkMode ? 'bg-purple-600 hover:bg-purple-500 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white'} px-5 py-3 rounded-xl font-semibold shadow transition transform hover:-translate-y-0.5`}
+            >
+              📊 Analytics
+            </button>
           </div>
           <button
             onClick={handleLogout}

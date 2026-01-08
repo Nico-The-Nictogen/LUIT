@@ -208,6 +208,16 @@ export default function MainPage() {
           >
             🏆 Leaderboard
           </button>
+          <button
+            onClick={() => navigate('/analytics')}
+            className={`w-full py-4 rounded-xl text-white font-bold text-lg transition transform hover:scale-105 active:scale-95 animate-slideUp stagger-4 ${
+              darkMode 
+                ? 'bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-800 hover:to-pink-800' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+            }`}
+          >
+            📊 Analytics
+          </button>
         </div>
 
         {/* Analytics */}

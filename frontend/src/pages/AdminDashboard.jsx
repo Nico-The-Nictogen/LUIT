@@ -230,6 +230,12 @@ export default function AdminDashboard() {
               {darkMode ? '☀️' : '🌙'}
             </button>
             <button
+              onClick={() => navigate('/analytics')}
+              className={`px-4 py-2 ${darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white rounded-lg text-sm font-medium transition transform hover:scale-105`}
+            >
+              📊 Analytics
+            </button>
+            <button
               onClick={() => navigate('/')}
               className={`px-4 py-2 ${darkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white rounded-lg text-sm font-medium transition transform hover:scale-105`}
             >

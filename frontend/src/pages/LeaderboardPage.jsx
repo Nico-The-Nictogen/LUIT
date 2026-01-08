@@ -16,7 +16,7 @@ export default function LeaderboardPage() {
   // Auto-select category based on userType, default to 'users' for non-logged in
   const initialCategory = userType === 'ngo' ? 'ngos' : 'users'
   const [category, setCategory] = useState(initialCategory)
-  const [type, setType] = useState('reporting') // reporting, cleaning
+  const [type, setType] = useState('overall') // overall, reporting, cleaning
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
   
@@ -141,7 +141,7 @@ export default function LeaderboardPage() {
 
         {/* Type Tabs */}
         <div className="flex gap-2 mb-4">
-          {['reporting', 'cleaning'].map(t => (
+          {['overall', 'reporting', 'cleaning'].map(t => (
             <button
               key={t}
               onClick={() => setType(t)}

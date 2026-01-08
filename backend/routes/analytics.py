@@ -170,6 +170,37 @@ async def get_users_leaderboard(category: str = "reporting", limit: int = 20):
                     user_stats[user_id]["points"] += points
             
             leaderboard = sorted(user_stats.values(), key=lambda x: x["points"], reverse=True)[:limit]
+        
+        elif category == "overall":
+            # Combine reporting and cleaning points
+            user_stats = {}
+            
+            # Add reporting points
+            reports = db.collection("reports").where(filter=FieldFilter("userType", "==", "individual")).stream()
+            for report in reports:
+                data = report.to_dict()
+                user_id = data.get("userId")
+                user_name = data.get("userName", "Anonymous")
+                
+                if user_id and user_id.strip():
+                    if user_id not in user_stats:
+                        user_stats[user_id] = {"id": user_id, "name": user_name, "points": 0, "city": ""}
+                    user_stats[user_id]["points"] += 10
+            
+            # Add cleaning points
+            cleanings = db.collection("cleanings").where(filter=FieldFilter("userType", "==", "individual")).stream()
+            for cleaning in cleanings:
+                data = cleaning.to_dict()
+                user_id = data.get("userId")
+                user_name = data.get("userName", "Anonymous")
+                points = data.get("pointsAwarded", 0)
+                
+                if user_id and user_id.strip():
+                    if user_id not in user_stats:
+                        user_stats[user_id] = {"id": user_id, "name": user_name, "points": 0, "city": ""}
+                    user_stats[user_id]["points"] += points
+            
+            leaderboard = sorted(user_stats.values(), key=lambda x: x["points"], reverse=True)[:limit]
         else:
             leaderboard = []
         
@@ -212,6 +243,37 @@ async def get_ngos_leaderboard(category: str = "reporting", limit: int = 20):
                 points = data.get("pointsAwarded", 0)
                 
                 # Skip if no userId
+                if ngo_id and ngo_id.strip():
+                    if ngo_id not in ngo_stats:
+                        ngo_stats[ngo_id] = {"id": ngo_id, "name": ngo_name, "points": 0, "city": ""}
+                    ngo_stats[ngo_id]["points"] += points
+            
+            leaderboard = sorted(ngo_stats.values(), key=lambda x: x["points"], reverse=True)[:limit]
+        
+        elif category == "overall":
+            # Combine reporting and cleaning points for NGOs
+            ngo_stats = {}
+            
+            # Add reporting points
+            reports = db.collection("reports").where(filter=FieldFilter("userType", "==", "ngo")).stream()
+            for report in reports:
+                data = report.to_dict()
+                ngo_id = data.get("userId")
+                ngo_name = data.get("userName", "Anonymous NGO")
+                
+                if ngo_id and ngo_id.strip():
+                    if ngo_id not in ngo_stats:
+                        ngo_stats[ngo_id] = {"id": ngo_id, "name": ngo_name, "points": 0, "city": ""}
+                    ngo_stats[ngo_id]["points"] += 10
+            
+            # Add cleaning points
+            cleanings = db.collection("cleanings").where(filter=FieldFilter("userType", "==", "ngo")).stream()
+            for cleaning in cleanings:
+                data = cleaning.to_dict()
+                ngo_id = data.get("userId")
+                ngo_name = data.get("userName", "Anonymous NGO")
+                points = data.get("pointsAwarded", 0)
+                
                 if ngo_id and ngo_id.strip():
                     if ngo_id not in ngo_stats:
                         ngo_stats[ngo_id] = {"id": ngo_id, "name": ngo_name, "points": 0, "city": ""}

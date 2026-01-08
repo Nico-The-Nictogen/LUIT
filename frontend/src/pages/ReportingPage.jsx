@@ -67,14 +67,36 @@ export default function ReportingPage() {
           try {
             const checkResult = await locationApi.checkDuplicateLocation(latitude, longitude)
             if (checkResult.data.is_duplicate) {
-              console.warn('⚠️ Location conflict detected:', checkResult.data)
-              setLocationConflict({
-                isDuplicate: true,
-                nearbyReports: checkResult.data.nearby_reports,
-                closestDistance: checkResult.data.distance_to_closest,
-                message: `Location already reported ${checkResult.data.distance_to_closest}m away`
-              })
-              setError(`❌ ${checkResult.data.nearby_reports.length} active report(s) within 100m`)
+              // Validate nearby reports exist to avoid showing deleted/stale entries
+              const rawNearby = checkResult.data.nearby_reports || []
+              const validated = []
+              for (const item of rawNearby) {
+                try {
+                  const res = await reportingApi.getReport(item.id)
+                  const report = res.data?.report
+                  if (report && report.imageUrl && report.status === 'active') {
+                    validated.push(item)
+                  }
+                } catch (_) {
+                  // Ignore 404/missing
+                }
+              }
+
+              if (validated.length > 0) {
+                console.warn('⚠️ Location conflict detected (validated):', validated)
+                const closest = validated.reduce((min, r) => (r.distance < min ? r.distance : min), validated[0].distance)
+                setLocationConflict({
+                  isDuplicate: true,
+                  nearbyReports: validated,
+                  closestDistance: closest,
+                  message: `Location already reported ${closest}m away`
+                })
+                setError(`❌ ${validated.length} active report(s) within 100m`)
+              } else {
+                setLocationConflict(null)
+                setError('')
+                console.log('✅ Location is clear after validation')
+              }
             } else {
               setLocationConflict(null)
               console.log('✅ Location is clear')

@@ -41,8 +41,10 @@ async def check_duplicate_location(latitude: float, longitude: float, radius_met
             data = report.to_dict()
             report_lat = data.get("latitude")
             report_lon = data.get("longitude")
+            image_url = data.get("imageUrl")
             
-            if report_lat and report_lon:
+            # Skip any invalid or incomplete reports (missing coordinates or image)
+            if report_lat and report_lon and image_url:
                 distance = haversine_distance(latitude, longitude, report_lat, report_lon)
                 
                 logger.info(f"📍 Checking distance to report {report.id}: {distance:.1f}m")

@@ -17,6 +17,9 @@ import AnalyticsPage from './pages/AnalyticsPage'
 function App() {
   const user = useAuthStore((state) => state.user)
   const userType = useAuthStore((state) => state.userType)
+  const hydrated = useAuthStore((state) => state.hydrated)
+
+  if (!hydrated) return null
 
   return (
     <Router>

@@ -191,6 +191,8 @@ async def get_report(reportId: str):
         report = get_document("reports", reportId)
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
+        # Include the document ID in the response
+        report['id'] = reportId
         return {"success": True, "report": report}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

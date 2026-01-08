@@ -34,85 +34,31 @@ async def get_all_cleanings():
 
 @router.get("/users")
 async def get_all_users():
-    """Get all users from Firebase Authentication"""
+    """Get all individual users from Firestore with activity counts.
+    Admin UI relies on Firestore as the source of truth so delete operations
+    reflect immediately and login remains consistent.
+    """
     try:
         users_list = []
-        
-        try:
-            # Get all users from Firebase Auth
-            page = auth.list_users()
-            
-            while page:
-                for user in page.users:
-                    # Get activity counts from Firestore
-                    reports_count = 0
-                    cleanings_count = 0
-                    
-                    # Count reports
-                    reports = db.collection('reports').where('userId', '==', user.uid).stream()
-                    for _ in reports:
-                        reports_count += 1
-                    
-                    # Count cleanings
-                    cleanings = db.collection('cleanings').where('userId', '==', user.uid).stream()
-                    for _ in cleanings:
-                        cleanings_count += 1
-                    
-                    users_list.append({
-                        'id': user.uid,
-                        'name': user.display_name or user.email or 'Unknown',
-                        'email': user.email or '',
-                        'userType': 'individual',
-                        'reportsCount': reports_count,
-                        'cleaningsCount': cleanings_count,
-                        'createdAt': str(user.user_metadata.creation_timestamp) if user.user_metadata else ''
-                    })
-                
-                # Get next page if exists
-                page = page.get_next_page()
-        except Exception as auth_error:
-            print(f"Auth error: {str(auth_error)}")
-            # Fallback: extract users from Firestore if Auth fails
-            users_dict = {}
-            
-            for doc in db.collection('reports').stream():
-                report_data = doc.to_dict()
-                user_id = report_data.get('userId')
-                user_email = report_data.get('userEmail', '')
-                user_name = report_data.get('userName', 'Unknown')
-                
-                if user_id and user_id not in users_dict:
-                    users_dict[user_id] = {
-                        'id': user_id,
-                        'name': user_name,
-                        'email': user_email,
-                        'userType': 'individual',
-                        'reportsCount': 0,
-                        'cleaningsCount': 0
-                    }
-                if user_id:
-                    users_dict[user_id]['reportsCount'] += 1
-            
-            for doc in db.collection('cleanings').stream():
-                cleaning_data = doc.to_dict()
-                user_id = cleaning_data.get('userId')
-                user_email = cleaning_data.get('userEmail', '')
-                user_name = cleaning_data.get('userName', 'Unknown')
-                
-                if user_id and user_id not in users_dict:
-                    users_dict[user_id] = {
-                        'id': user_id,
-                        'name': user_name,
-                        'email': user_email,
-                        'userType': 'individual',
-                        'reportsCount': 0,
-                        'cleaningsCount': 0
-                    }
-                if user_id:
-                    users_dict[user_id]['cleaningsCount'] += 1
-            
-            users_list = list(users_dict.values())
-        
+
+        # Read canonical profiles from Firestore
+        users_ref = db.collection('users').where('userType', '==', 'individual')
+        for doc in users_ref.stream():
+            user = doc.to_dict() or {}
+            uid = doc.id
+            # Count activity
+            reports_count = sum(1 for _ in db.collection('reports').where('userId', '==', uid).stream())
+            cleanings_count = sum(1 for _ in db.collection('cleanings').where('userId', '==', uid).stream())
+            users_list.append({
+                'id': uid,
+                'name': user.get('name') or user.get('email', 'Unknown'),
+                'email': user.get('email', ''),
+                'userType': 'individual',
+                'reportsCount': reports_count,
+                'cleaningsCount': cleanings_count,
+                'createdAt': str(user.get('createdAt'))
+            })
+
         return users_list
     except Exception as e:
         print(f"Error fetching users: {str(e)}")
@@ -120,51 +66,27 @@ async def get_all_users():
 
 @router.get("/ngos")
 async def get_all_ngos():
-    """Get all unique NGOs from reports and cleanings"""
+    """Get all NGOs from Firestore with activity counts."""
     try:
-        ngos_dict = {}
-        
-        # Get NGOs from reports (where userType is ngo)
-        reports_ref = db.collection('reports')
-        for doc in reports_ref.stream():
-            report_data = doc.to_dict()
-            if report_data.get('userType') == 'ngo':
-                user_id = report_data.get('userId')
-                user_name = report_data.get('userName', 'Unknown NGO')
-                
-                if user_id and user_id not in ngos_dict:
-                    ngos_dict[user_id] = {
-                        'id': user_id,
-                        'name': user_name,
-                        'userType': 'ngo',
-                        'reportsCount': 0,
-                        'cleaningsCount': 0,
-                        'email': report_data.get('userEmail', '')
-                    }
-                if user_id:
-                    ngos_dict[user_id]['reportsCount'] += 1
-        
-        # Get NGOs from cleanings
-        cleanings_ref = db.collection('cleanings')
-        for doc in cleanings_ref.stream():
-            cleaning_data = doc.to_dict()
-            if cleaning_data.get('userType') == 'ngo':
-                user_id = cleaning_data.get('userId')
-                user_name = cleaning_data.get('userName', 'Unknown NGO')
-                
-                if user_id and user_id not in ngos_dict:
-                    ngos_dict[user_id] = {
-                        'id': user_id,
-                        'name': user_name,
-                        'userType': 'ngo',
-                        'reportsCount': 0,
-                        'cleaningsCount': 0,
-                        'email': cleaning_data.get('userEmail', '')
-                    }
-                if user_id:
-                    ngos_dict[user_id]['cleaningsCount'] += 1
-        
-        return list(ngos_dict.values())
+        ngos_list = []
+
+        ngos_ref = db.collection('users').where('userType', '==', 'ngo')
+        for doc in ngos_ref.stream():
+            ngo = doc.to_dict() or {}
+            uid = doc.id
+            reports_count = sum(1 for _ in db.collection('reports').where('userId', '==', uid).stream())
+            cleanings_count = sum(1 for _ in db.collection('cleanings').where('userId', '==', uid).stream())
+            ngos_list.append({
+                'id': uid,
+                'name': ngo.get('ngoName') or ngo.get('name') or 'Unknown NGO',
+                'email': ngo.get('email', ''),
+                'userType': 'ngo',
+                'reportsCount': reports_count,
+                'cleaningsCount': cleanings_count,
+                'createdAt': str(ngo.get('createdAt'))
+            })
+
+        return ngos_list
     except Exception as e:
         print(f"Error fetching NGOs: {str(e)}")
         return []
@@ -397,7 +319,12 @@ async def delete_user(user_id: str):
         
         # Delete user profile if exists
         db.collection('users').document(user_id).delete()
-        
+        # Attempt to delete auth user as well so Admin table stays consistent
+        try:
+            auth.delete_user(user_id)
+        except Exception as _:
+            pass
+
         batch.commit()
         
         return {"message": f"Deleted user {user_id} and {count} associated records"}
@@ -429,6 +356,13 @@ async def delete_ngo(ngo_id: str):
                 batch.commit()
                 batch = db.batch()
         
+        # Delete NGO profile and auth account
+        db.collection('users').document(ngo_id).delete()
+        try:
+            auth.delete_user(ngo_id)
+        except Exception as _:
+            pass
+
         batch.commit()
         
         return {"message": f"Deleted NGO {ngo_id} and {count} associated records"}

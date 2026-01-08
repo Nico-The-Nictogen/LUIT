@@ -63,16 +63,9 @@ export default function CleanerPage() {
   const wasteTypes = ['plastic', 'organic', 'mixed', 'toxic']
   if (userType === 'ngo') wasteTypes.push('sewage')
 
-    const handleCleanClick = async (cleaningId) => {
-      try {
-        // Verify the report still exists before navigating
-        const { reportingApi } = await import('../api')
-        await reportingApi.getReport(cleaningId)
-        navigate(`/cleaning/${cleaningId}`)
-      } catch (err) {
-        // Silently refresh list if deleted or on error; no user-facing alert
-        await fetchCleanings()
-      }
+    const handleCleanClick = (cleaningId) => {
+      // Navigate directly to cleaning page; CleaningPage will handle validation
+      navigate(`/cleaning/${cleaningId}`)
     }
 
   return (

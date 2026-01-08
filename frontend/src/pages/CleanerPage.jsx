@@ -28,31 +28,8 @@ export default function CleanerPage() {
     setLoading(true)
     try {
       const response = await cleaningApi.getAvailableCleanings(selectedTab, userType)
-      console.log('Cleanings response:', response.data)
-        const availableCleanings = response.data.cleanings || []
-      
-        // Validate that each cleaning still exists (report wasn't deleted)
-        const validCleanings = []
-        for (const cleaning of availableCleanings) {
-          try {
-            // Try to fetch the report to verify it exists
-            await import('../api').then(module => module.reportingApi.getReport(cleaning.id))
-            validCleanings.push(cleaning)
-          } catch (err) {
-            if (err.response?.status === 404) {
-              console.log(`⚠️  Cleaning ${cleaning.id} no longer exists (report deleted)`)
-              // Skip this cleaning as the report was deleted
-            } else {
-              // If it's a different error, still include it (network error, etc)
-              validCleanings.push(cleaning)
-            }
-          }
-        }
-      
-        setCleanings(validCleanings)
-        if (validCleanings.length === 0 && availableCleanings.length > 0) {
-          console.log('All cleanings were deleted')
-        }
+      const availableCleanings = response.data.cleanings || []
+      setCleanings(availableCleanings)
     } catch (err) {
       console.error('Failed to fetch cleanings:', err.response?.data || err.message)
     } finally {

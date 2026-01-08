@@ -31,6 +31,7 @@ export default function ReportingPage() {
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraStarted, setCameraStarted] = useState(false)
   const streamRef = useRef(null)
+  const [cameraKey, setCameraKey] = useState(0)
 
   // Get location on mount
   useEffect(() => {
@@ -38,9 +39,7 @@ export default function ReportingPage() {
     
     // Cleanup: stop camera on unmount
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
-      }
+      stopCamera()
     }
   }, [])
 
@@ -101,9 +100,24 @@ export default function ReportingPage() {
     }
   }
 
+  const stopCamera = () => {
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+    } catch (_) {}
+    setCameraActive(false)
+  }
+
   const startCamera = async () => {
     try {
       setError('')
+      // Ensure any previous stream is stopped before starting a new one
+      stopCamera()
       const constraints = {
         video: {
           facingMode: 'environment',
@@ -119,7 +133,10 @@ export default function ReportingPage() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play()
+          const p = videoRef.current.play()
+          if (p && typeof p.then === 'function') {
+            p.catch(() => {})
+          }
           setCameraActive(true)
         }
       }
@@ -453,6 +470,7 @@ export default function ReportingPage() {
                     objectFit: 'cover',
                     transform: 'scaleX(-1)'
                   }}
+                  key={cameraKey}
                 />
                 <button
                   onClick={captureImage}
@@ -463,11 +481,8 @@ export default function ReportingPage() {
                 </button>
                 <button
                   onClick={() => {
+                    stopCamera()
                     setCameraStarted(false)
-                    if (streamRef.current) {
-                      streamRef.current.getTracks().forEach(track => track.stop())
-                    }
-                    setCameraActive(false)
                   }}
                   className="w-full mt-2 py-2 bg-gray-400 hover:bg-gray-500 text-white font-semibold rounded-lg text-sm"
                 >
@@ -526,6 +541,11 @@ export default function ReportingPage() {
                   setVerification(null)
                   setCloudinaryUrl(null)
                   setCloudinaryPublicId(null)
+                  setVerifying(false)
+                  // Restart camera cleanly for retake
+                  setCameraStarted(true)
+                  setCameraKey((k) => k + 1)
+                  startCamera()
                 }}
                 className="py-2 bg-gray-400 hover:bg-gray-500 text-white font-semibold rounded-lg"
               >

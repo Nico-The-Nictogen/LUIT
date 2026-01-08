@@ -86,11 +86,15 @@ export default function CleaningPage() {
 
   const fetchReport = async () => {
     try {
+      console.log(`📡 Fetching report: ${reportId}`)
       const response = await reportingApi.getReport(reportId)
+      console.log(`📦 API Response:`, response.data)
       const reportData = response.data.report || response.data
+      console.log(`📋 Report data:`, reportData)
       
       // Check if report exists and has required data; if not, navigate back silently
       if (!reportData || !reportData.id) {
+        console.warn(`⚠️ Report ${reportId} not found or missing ID, redirecting to cleaner`)
         setReport(null)
         navigate('/cleaner')
         return
@@ -101,9 +105,12 @@ export default function CleaningPage() {
       
       // Check if image URL is valid; if not, navigate back silently
       if (!reportData.imageUrl) {
+        console.warn(`⚠️ Report ${reportId} missing imageUrl, redirecting to cleaner`)
         navigate('/cleaner')
         return
       }
+      
+      console.log(`✅ Report loaded successfully`)
       
       // Convert image URL to base64
       try {

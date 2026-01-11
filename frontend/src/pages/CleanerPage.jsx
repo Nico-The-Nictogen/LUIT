@@ -140,26 +140,12 @@ export default function CleanerPage() {
                 />
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className={`font-semibold ${
-                        darkMode ? 'text-gray-300' : 'text-gray-800'
-                      }`}>{cleaning.wasteType}</p>
-                      <p className={`text-sm ${
-                        darkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        {(() => {
-                          const km = Number(cleaning.distanceKm ?? cleaning.distance ?? 0)
-                          if (!isFinite(km)) return '📍 distance unavailable'
-                          if (km >= 1) return `📍 ${km.toFixed(2)} km away`
-                          return `📍 ${Math.max(1, Math.round(km * 1000))} m away`
-                        })()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${
-                        darkMode ? 'text-emerald-300' : 'text-green-600'
-                      }`}>{cleaning.points} pts</p>
-                    </div>
+                    <p className={`font-semibold ${
+                      darkMode ? 'text-gray-300' : 'text-gray-800'
+                    }`}>{cleaning.wasteType}</p>
+                    <p className={`font-bold ${
+                      darkMode ? 'text-emerald-300' : 'text-green-600'
+                    }`}>{cleaning.points} pts</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button

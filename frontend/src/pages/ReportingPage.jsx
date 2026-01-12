@@ -413,35 +413,30 @@ export default function ReportingPage() {
           </div>
         )}
 
-        {/* Waste Type Selection */}
-        <div className="mb-6">
-          <label className={`block text-sm font-semibold mb-2 ${
-            darkMode ? 'text-gray-300' : 'text-gray-800'
+        {/* Waste Type Display - Auto-detected */}
+        {verification?.wasteType && (
+          <div className={`mb-6 p-4 rounded-lg border-2 ${
+            darkMode ? 'bg-slate-800 border-cyan-700' : 'bg-blue-50 border-blue-200'
           }`}>
-            Waste Type {verification?.wasteType && '(Auto-detected)'}
-          </label>
-          <select
-            value={wasteType}
-            onChange={(e) => setWasteType(e.target.value)}
-            disabled={verifying}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              darkMode 
-                ? 'bg-slate-700 border-cyan-700 text-white focus:ring-cyan-600' 
-                : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-600'
-            } ${verifying ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <option value="plastic">🔵 Plastic Waste</option>
-            <option value="organic">🟢 Organic Waste</option>
-            <option value="mixed">🟡 Mixed Waste</option>
-            <option value="toxic">🔴 Toxic/Hazardous Waste</option>
-            <option value="sewage">⚫ Untreated Sewage Point</option>
-          </select>
-          {verification?.wasteType && (
-            <p className={`text-xs mt-1 ${darkMode ? 'text-cyan-300' : 'text-blue-600'}`}>
-              ✨ AI detected: {verification.wasteType} waste
+            <label className={`block text-sm font-semibold mb-2 ${
+              darkMode ? 'text-gray-300' : 'text-gray-800'
+            }`}>
+              Detected Waste Type
+            </label>
+            <div className={`flex items-center gap-2 text-lg font-bold ${
+              darkMode ? 'text-cyan-300' : 'text-blue-600'
+            }`}>
+              {wasteType === 'plastic' && '🔵 Plastic Waste'}
+              {wasteType === 'organic' && '🟢 Organic Waste'}
+              {wasteType === 'mixed' && '🟡 Mixed Waste'}
+              {wasteType === 'toxic' && '🔴 Toxic/Hazardous Waste'}
+              {wasteType === 'sewage' && '⚫ Untreated Sewage Point'}
+            </div>
+            <p className={`text-xs mt-1 ${darkMode ? 'text-cyan-400' : 'text-blue-500'}`}>
+              ✨ AI automatically detected this waste type
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Camera Section */}
         {!image ? (

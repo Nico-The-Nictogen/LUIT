@@ -39,30 +39,56 @@ COCO_CLASS_NAMES = [
     "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
 ]
 
-# Map COCO classes to app waste types
-PLASTIC_CLASSES = {"bottle", "cup", "wine glass", "fork", "knife", "spoon", "bowl", "toothbrush"}
-ORGANIC_CLASSES = {"banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake"}
+# Map COCO classes to app waste types - expanded for better coverage
+PLASTIC_CLASSES = {
+    "bottle", "cup", "wine glass", "fork", "knife", "spoon", "bowl", "toothbrush",
+    "backpack", "handbag", "suitcase", "umbrella", "frisbee", "sports ball", "kite",
+    "cell phone", "remote", "keyboard", "mouse", "scissors", "vase", "hair drier"
+}
+ORGANIC_CLASSES = {
+    "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", 
+    "donut", "cake", "potted plant"
+}
 SEWAGE_CLASSES = {"toilet", "sink"}
-TOXIC_CLASSES = set()  # COCO doesn't have battery/chemical classes; will default based on context
+TOXIC_CLASSES = {"oven", "microwave", "toaster", "refrigerator", "tv", "laptop"}  # Electronics/appliances
 
 
 def _classify_waste_type(detections: List[dict]) -> str:
-    """Map YOLO detections to app waste type classes."""
+    """Map YOLO detections to app waste type classes with smarter logic."""
     if not detections:
-        return "mixed"  # default fallback
+        return "plastic"  # default to plastic instead of mixed
     
     detected_classes = set()
+    class_counts = {}
     for det in detections:
         class_id = det.get("class_id", -1)
         if 0 <= class_id < len(COCO_CLASS_NAMES):
-            detected_classes.add(COCO_CLASS_NAMES[class_id])
+            class_name = COCO_CLASS_NAMES[class_id]
+            detected_classes.add(class_name)
+            class_counts[class_name] = class_counts.get(class_name, 0) + 1
     
-    # Priority logic: sewage > organic > plastic > mixed
-    if detected_classes & SEWAGE_CLASSES:
+    # Filter out non-trash items (people, vehicles, furniture)
+    NON_TRASH = {
+        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
+        "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
+        "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe",
+        "chair", "couch", "bed", "dining table", "book", "clock", "teddy bear"
+    }
+    trash_classes = detected_classes - NON_TRASH
+    
+    if not trash_classes:
+        # Only non-trash detected, default to plastic (likely small items YOLO missed)
+        return "plastic"
+    
+    # Priority logic: sewage > toxic > organic > plastic > mixed
+    if trash_classes & SEWAGE_CLASSES:
         return "sewage"
     
-    has_organic = bool(detected_classes & ORGANIC_CLASSES)
-    has_plastic = bool(detected_classes & PLASTIC_CLASSES)
+    if trash_classes & TOXIC_CLASSES:
+        return "toxic"
+    
+    has_organic = bool(trash_classes & ORGANIC_CLASSES)
+    has_plastic = bool(trash_classes & PLASTIC_CLASSES)
     
     if has_organic and has_plastic:
         return "mixed"
@@ -71,11 +97,8 @@ def _classify_waste_type(detections: List[dict]) -> str:
     if has_plastic:
         return "plastic"
     
-    # Multiple diverse objects → mixed; single unknown → mixed
-    if len(detected_classes) > 2:
-        return "mixed"
-    
-    return "mixed"  # default
+    # If only unclassified trash items, default to plastic (most common)
+    return "plastic"
 
 
 def _ensure_model_downloaded():
@@ -307,7 +330,7 @@ async def verify_garbage_image(image_base64: str) -> dict:
         return {
             'is_garbage': bool(is_garbage),
             'confidence': float(conf),
-            'wasteType': 'mixed',  # heuristic can't classify type, default to mixed
+            'wasteType': 'plastic',  # heuristic defaults to plastic (most common waste)
             'detected_items': [{'item': 'waste area', 'confidence': float(conf)}],
             'message': 'Waste area detected (heuristic)' if is_garbage else 'No garbage detected. Please take a clearer photo of waste area.'
         }

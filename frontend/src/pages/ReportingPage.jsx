@@ -439,6 +439,12 @@ export default function ReportingPage() {
             <p className={`text-xs mt-1 ${darkMode ? 'text-cyan-400' : 'text-blue-500'}`}>
               ✨ AI automatically detected this waste type
             </p>
+            {verification?.detected_items && verification.detected_items.length > 0 && (
+              <div className={`mt-2 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <span className="font-semibold">Detected objects: </span>
+                {verification.detected_items.map(item => `${item.item} (${(item.confidence * 100).toFixed(0)}%)`).join(', ')}
+              </div>
+            )}
           </div>
         )}
 

@@ -113,6 +113,11 @@ async def create_report(request: ReportRequest):
                 if not garbage_check['is_garbage']:
                     return {"success": False, "message": garbage_check['message']}
                 
+                # Auto-detect waste type from image if not provided
+                detected_waste_type = garbage_check.get('wasteType', 'mixed')
+                if not request.wasteType or request.wasteType == 'mixed':
+                    request.wasteType = detected_waste_type
+                
                 upload_result = await upload_image_to_cloudinary(request.imageBase64, folder="luit/reports")
                 if not upload_result['success']:
                     return {"success": False, "message": upload_result['message']}

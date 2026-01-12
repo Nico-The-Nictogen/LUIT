@@ -25,6 +25,59 @@ YOLO_IOU_THRESHOLD = 0.45
 _ort_session = None
 
 
+# COCO class ID to waste type mapping
+COCO_CLASS_NAMES = [
+    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
+    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog",
+    "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+    "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+    "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
+    "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich",
+    "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
+    "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard",
+    "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock",
+    "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
+]
+
+# Map COCO classes to app waste types
+PLASTIC_CLASSES = {"bottle", "cup", "wine glass", "fork", "knife", "spoon", "bowl", "toothbrush"}
+ORGANIC_CLASSES = {"banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake"}
+SEWAGE_CLASSES = {"toilet", "sink"}
+TOXIC_CLASSES = set()  # COCO doesn't have battery/chemical classes; will default based on context
+
+
+def _classify_waste_type(detections: List[dict]) -> str:
+    """Map YOLO detections to app waste type classes."""
+    if not detections:
+        return "mixed"  # default fallback
+    
+    detected_classes = set()
+    for det in detections:
+        class_id = det.get("class_id", -1)
+        if 0 <= class_id < len(COCO_CLASS_NAMES):
+            detected_classes.add(COCO_CLASS_NAMES[class_id])
+    
+    # Priority logic: sewage > organic > plastic > mixed
+    if detected_classes & SEWAGE_CLASSES:
+        return "sewage"
+    
+    has_organic = bool(detected_classes & ORGANIC_CLASSES)
+    has_plastic = bool(detected_classes & PLASTIC_CLASSES)
+    
+    if has_organic and has_plastic:
+        return "mixed"
+    if has_organic:
+        return "organic"
+    if has_plastic:
+        return "plastic"
+    
+    # Multiple diverse objects → mixed; single unknown → mixed
+    if len(detected_classes) > 2:
+        return "mixed"
+    
+    return "mixed"  # default
+
+
 def _ensure_model_downloaded():
     """Download YOLO ONNX weights once if missing."""
     os.makedirs(os.path.dirname(YOLO_MODEL_PATH), exist_ok=True)
@@ -230,17 +283,19 @@ async def verify_garbage_image(image_base64: str) -> dict:
             detections = _run_yolo(image_array)
             if detections:
                 top = max(detections, key=lambda d: d['score'])
+                detected_waste_type = _classify_waste_type(detections)
                 return {
                     'is_garbage': True,
                     'confidence': float(top['score']),
+                    'wasteType': detected_waste_type,
                     'detected_items': [
                         {
-                            'item': f"object_{top['class_id']}",
+                            'item': COCO_CLASS_NAMES[top['class_id']] if 0 <= top['class_id'] < len(COCO_CLASS_NAMES) else f"object_{top['class_id']}",
                             'confidence': float(top['score']),
                             'box': top['box'],
                         }
                     ],
-                    'message': 'Waste detected (YOLOv8n)',
+                    'message': f'{detected_waste_type.capitalize()} waste detected (YOLOv8n)',
                 }
             logger.info("⚠️ YOLO found no confident detections; falling back to heuristic")
         except Exception as yolo_err:
@@ -251,6 +306,7 @@ async def verify_garbage_image(image_base64: str) -> dict:
         return {
             'is_garbage': bool(is_garbage),
             'confidence': float(conf),
+            'wasteType': 'mixed',  # heuristic can't classify type, default to mixed
             'detected_items': [{'item': 'waste area', 'confidence': float(conf)}],
             'message': 'Waste area detected (heuristic)' if is_garbage else 'No garbage detected. Please take a clearer photo of waste area.'
         }

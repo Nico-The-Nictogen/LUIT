@@ -220,6 +220,11 @@ export default function ReportingPage() {
           setVerifying(false)
           return
         }
+        
+        // Auto-detect waste type from image if available
+        if (verifyResult.data.wasteType) {
+          setWasteType(verifyResult.data.wasteType)
+        }
       } catch (verifyErr) {
         setError('Error verifying image: ' + (verifyErr.response?.data?.detail || verifyErr.message))
         setVerification(null)
@@ -412,15 +417,18 @@ export default function ReportingPage() {
         <div className="mb-6">
           <label className={`block text-sm font-semibold mb-2 ${
             darkMode ? 'text-gray-300' : 'text-gray-800'
-          }`}>Waste Type</label>
+          }`}>
+            Waste Type {verification?.wasteType && '(Auto-detected)'}
+          </label>
           <select
             value={wasteType}
             onChange={(e) => setWasteType(e.target.value)}
+            disabled={verifying}
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
               darkMode 
                 ? 'bg-slate-700 border-cyan-700 text-white focus:ring-cyan-600' 
                 : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-600'
-            }`}
+            } ${verifying ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <option value="plastic">🔵 Plastic Waste</option>
             <option value="organic">🟢 Organic Waste</option>
@@ -428,6 +436,11 @@ export default function ReportingPage() {
             <option value="toxic">🔴 Toxic/Hazardous Waste</option>
             <option value="sewage">⚫ Untreated Sewage Point</option>
           </select>
+          {verification?.wasteType && (
+            <p className={`text-xs mt-1 ${darkMode ? 'text-cyan-300' : 'text-blue-600'}`}>
+              ✨ AI detected: {verification.wasteType} waste
+            </p>
+          )}
         </div>
 
         {/* Camera Section */}

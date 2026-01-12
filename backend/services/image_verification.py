@@ -284,6 +284,16 @@ async def verify_cleaning_image(before_image_base64: str, after_image_base64: st
             after_image_pil = after_image_pil.resize((before_array.shape[1], before_array.shape[0]))
             after_array = np.array(after_image_pil)
         
+        # Try YOLO before/after detection to validate removal of trash-like objects
+        yolo_before = []
+        yolo_after = []
+        try:
+            yolo_before = _run_yolo(before_array)
+            yolo_after = _run_yolo(after_array)
+            logger.info(f"🧠 YOLO before: {len(yolo_before)} detections, after: {len(yolo_after)} detections")
+        except Exception as yolo_err:
+            logger.error(f"❌ YOLO cleaning verification failed: {yolo_err}; falling back to CV deltas")
+
         # Calculate image difference
         before_gray = cv2.cvtColor(before_array, cv2.COLOR_RGB2GRAY) if len(before_array.shape) > 2 else before_array
         after_gray = cv2.cvtColor(after_array, cv2.COLOR_RGB2GRAY) if len(after_array.shape) > 2 else after_array
@@ -296,7 +306,7 @@ async def verify_cleaning_image(before_image_base64: str, after_image_base64: st
         
         logger.info(f"📊 Similarity: {similarity:.1f}%, Difference: {difference_percent:.1f}%")
         
-        # Consider cleaned if difference is >30% (significant change detected)
+        # Base heuristic: significant change + edge reduction
         is_cleaned = difference_percent > 30
         
         # Additional check: verify after image has less clutter
@@ -308,13 +318,21 @@ async def verify_cleaning_image(before_image_base64: str, after_image_base64: st
         
         logger.info(f"🧹 Before edge density: {before_edge_density:.3f}, After edge density: {after_edge_density:.3f}")
         
-        # After image should have fewer edges (less clutter)
         clutter_reduced = after_edge_density < before_edge_density * 0.7
-        
         if clutter_reduced:
-            logger.info("✅ Clutter reduced - area appears cleaned")
+            logger.info("✅ Clutter reduced - area appears cleaned (edge delta)")
             is_cleaned = True
-        
+
+        # YOLO signal: if before had detections and after has none or sharply lower scores, mark cleaned
+        if yolo_before:
+            before_max = max(d['score'] for d in yolo_before)
+            after_max = max((d['score'] for d in yolo_after), default=0.0)
+            if not yolo_after or after_max < before_max * 0.4:
+                logger.info("✅ YOLO confirms removal (detections dropped)")
+                is_cleaned = True
+            else:
+                logger.info("⚠️ YOLO still sees objects after cleaning attempt")
+
         message = 'Area successfully cleaned!' if is_cleaned else 'Please ensure the area is properly cleaned.'
         logger.info(f"Result: is_cleaned={is_cleaned}, message={message}")
         
@@ -322,6 +340,8 @@ async def verify_cleaning_image(before_image_base64: str, after_image_base64: st
             'is_cleaned': is_cleaned,
             'similarity': float(similarity),
             'difference': float(difference_percent),
+            'yolo_before_detections': len(yolo_before),
+            'yolo_after_detections': len(yolo_after),
             'message': message
         }
     

@@ -56,66 +56,85 @@ export default function ReportingPage() {
 
   const getLocation = () => {
     setLocationLoading(true)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords
-          setLocation(latitude, longitude, position.coords.accuracy)
-          setError('')
-          
-          // Check for nearby active reports within 100m
-          try {
-            const checkResult = await locationApi.checkDuplicateLocation(latitude, longitude)
-            if (checkResult.data.is_duplicate) {
-              // Validate nearby reports exist to avoid showing deleted/stale entries
-              const rawNearby = checkResult.data.nearby_reports || []
-              const validated = []
-              for (const item of rawNearby) {
-                try {
-                  const res = await reportingApi.getReport(item.id)
-                  const report = res.data?.report
-                  if (report && report.imageUrl && report.status === 'active') {
-                    validated.push(item)
-                  }
-                } catch (_) {
-                  // Ignore 404/missing
+    setError('')
+    
+    if (!navigator.geolocation) {
+      setError('❌ Geolocation not supported by your browser')
+      setLocationLoading(false)
+      return
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+        setLocation(latitude, longitude, position.coords.accuracy)
+        setError('')
+        
+        // Check for nearby active reports within 100m
+        try {
+          const checkResult = await locationApi.checkDuplicateLocation(latitude, longitude)
+          if (checkResult.data.is_duplicate) {
+            // Validate nearby reports exist to avoid showing deleted/stale entries
+            const rawNearby = checkResult.data.nearby_reports || []
+            const validated = []
+            for (const item of rawNearby) {
+              try {
+                const res = await reportingApi.getReport(item.id)
+                const report = res.data?.report
+                if (report && report.imageUrl && report.status === 'active') {
+                  validated.push(item)
                 }
+              } catch (_) {
+                // Ignore 404/missing
               }
+            }
 
-              if (validated.length > 0) {
-                const closest = validated.reduce((min, r) => (r.distance < min ? r.distance : min), validated[0].distance)
-                setLocationConflict({
-                  isDuplicate: true,
-                  nearbyReports: validated,
-                  closestDistance: closest,
-                  message: `Location already reported ${closest}m away`
-                })
-                setError(`❌ ${validated.length} active report(s) within 100m`)
-              } else {
-                setLocationConflict(null)
-                setError('')
-              }
+            if (validated.length > 0) {
+              const closest = validated.reduce((min, r) => (r.distance < min ? r.distance : min), validated[0].distance)
+              setLocationConflict({
+                isDuplicate: true,
+                nearbyReports: validated,
+                closestDistance: closest,
+                message: `Location already reported ${closest}m away`
+              })
+              setError(`❌ ${validated.length} active report(s) within 100m`)
             } else {
               setLocationConflict(null)
+              setError('')
             }
-          } catch (err) {
+          } else {
             setLocationConflict(null)
           }
-          
-          setLocationLoading(false)
-        },
-        (err) => {
-          setError('Failed to get location. Please enable GPS.')
+        } catch (err) {
           setLocationConflict(null)
-          setLocationLoading(false)
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      )
-    } else {
-      setError('Geolocation not supported')
-      setLocationConflict(null)
-      setLocationLoading(false)
-    }
+        }
+        
+        setLocationLoading(false)
+      },
+      (err) => {
+        console.error('Geolocation error:', err)
+        let errorMessage = 'Failed to get location. '
+        
+        switch(err.code) {
+          case err.PERMISSION_DENIED:
+            errorMessage += 'Please allow location access in your browser settings.'
+            break
+          case err.POSITION_UNAVAILABLE:
+            errorMessage += 'Location information unavailable. Make sure GPS is enabled.'
+            break
+          case err.TIMEOUT:
+            errorMessage += 'Location request timed out. Please try again.'
+            break
+          default:
+            errorMessage += 'Please enable GPS and try again.'
+        }
+        
+        setError(errorMessage)
+        setLocationConflict(null)
+        setLocationLoading(false)
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    )
   }
 
   const stopCamera = () => {

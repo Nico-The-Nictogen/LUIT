@@ -21,6 +21,7 @@ export default function ReportingPage() {
   const [success, setSuccess] = useState('')
   const [locationLoading, setLocationLoading] = useState(false)
   const [locationConflict, setLocationConflict] = useState(null)
+  const [geofenceStatus, setGeofenceStatus] = useState(null)
   const [verification, setVerification] = useState(null)
   const [verifying, setVerifying] = useState(false)
   const [cloudinaryUrl, setCloudinaryUrl] = useState(null)
@@ -62,6 +63,22 @@ export default function ReportingPage() {
           const { latitude, longitude } = position.coords
           setLocation(latitude, longitude, position.coords.accuracy)
           setError('')
+          
+          // Check geofence first
+          try {
+            const geofenceResult = await reportingApi.checkGeofence(latitude, longitude)
+            setGeofenceStatus(geofenceResult.data)
+            
+            if (!geofenceResult.data.allowed) {
+              setError(`🚫 ${geofenceResult.data.message}`)
+              setLocationConflict(null)
+              setLocationLoading(false)
+              return
+            }
+          } catch (err) {
+            console.error('Geofence check failed:', err)
+            setGeofenceStatus(null)
+          }
           
           // Check for nearby active reports within 100m
           try {
@@ -107,6 +124,7 @@ export default function ReportingPage() {
         (err) => {
           setError('Failed to get location. Please enable GPS.')
           setLocationConflict(null)
+          setGeofenceStatus(null)
           setLocationLoading(false)
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -114,6 +132,7 @@ export default function ReportingPage() {
     } else {
       setError('Geolocation not supported')
       setLocationConflict(null)
+      setGeofenceStatus(null)
       setLocationLoading(false)
     }
   }
@@ -257,6 +276,10 @@ export default function ReportingPage() {
   }
 
   const handleSubmit = async () => {
+    if (geofenceStatus && !geofenceStatus.allowed) {
+      setError(`🚫 Cannot report outside geofence. You must be within 800m of Brahmaputra River (currently ${Math.round(geofenceStatus.distance)}m away)`)
+      return
+    }
     if (locationConflict?.isDuplicate) {
       setError(`❌ Cannot report here. Location already reported ${locationConflict.closestDistance}m away`)
       return
@@ -354,7 +377,9 @@ export default function ReportingPage() {
       <main className="flex-1 max-w-md mx-auto px-4 py-6 w-full">
         {/* Location Status */}
         <div className={`p-4 rounded-lg mb-4 border-2 transition ${
-          locationConflict?.isDuplicate 
+          geofenceStatus && !geofenceStatus.allowed
+            ? darkMode ? 'bg-red-900 border-red-700' : 'bg-red-50 border-red-400'
+            : locationConflict?.isDuplicate 
             ? darkMode ? 'bg-red-900 border-red-700' : 'bg-red-50 border-red-400'
             : darkMode ? 'bg-slate-800 border-cyan-700' : 'bg-blue-50 border-blue-200'
         }`}>
@@ -370,6 +395,20 @@ export default function ReportingPage() {
               <p className={`text-sm font-semibold ${
                 darkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>{latitude.toFixed(4)}, {longitude.toFixed(4)}</p>
+              {geofenceStatus && !geofenceStatus.allowed && (
+                <p className={`text-sm font-semibold mt-2 ${
+                  darkMode ? 'text-red-300' : 'text-red-600'
+                }`}>
+                  🚫 Too far from Brahmaputra River ({Math.round(geofenceStatus.distance)}m away, max 800m)
+                </p>
+              )}
+              {geofenceStatus && geofenceStatus.allowed && (
+                <p className={`text-xs mt-1 ${
+                  darkMode ? 'text-green-300' : 'text-green-600'
+                }`}>
+                  ✅ Within reporting zone ({Math.round(geofenceStatus.distance)}m from river)
+                </p>
+              )}
               {locationConflict?.isDuplicate && (
                 <p className={`text-sm font-semibold mt-2 ${
                   darkMode ? 'text-red-300' : 'text-red-600'
@@ -386,7 +425,9 @@ export default function ReportingPage() {
           <button
             onClick={getLocation}
             className={`mt-2 text-xs font-semibold hover:opacity-80 ${
-              locationConflict?.isDuplicate
+              geofenceStatus && !geofenceStatus.allowed
+                ? darkMode ? 'text-red-300' : 'text-red-600'
+                : locationConflict?.isDuplicate
                 ? darkMode ? 'text-red-300' : 'text-red-600'
                 : darkMode ? 'text-cyan-300' : 'text-blue-600'
             }`}

@@ -91,6 +91,15 @@ async def check_location(latitude: float, longitude: float):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/check-geofence")
+async def check_geofence(latitude: float, longitude: float):
+    """Check if location is within Brahmaputra geofence"""
+    try:
+        result = is_within_brahmaputra_geofence(latitude, longitude)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.post("/report")
 async def create_report(request: ReportRequest):
     """Create new garbage report"""

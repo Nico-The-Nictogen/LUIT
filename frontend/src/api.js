@@ -46,6 +46,7 @@ export const reportingApi = {
   verifyImage: (imageBase64) => api.post('/reporting/verify-image', { image_base64: imageBase64 }),
   deleteImage: (public_id) => api.post('/reporting/delete-image', { public_id }),
   checkLocation: (latitude, longitude) => api.post('/reporting/check-location', { latitude, longitude }),
+  checkGeofence: (latitude, longitude) => api.get('/reporting/check-geofence', { params: { latitude, longitude } }),
   createReport: (data) => api.post('/reporting/report', data),
   getReports: (wasteType, limit) => api.get('/reporting/reports', { 
     params: { wasteType, limit } 

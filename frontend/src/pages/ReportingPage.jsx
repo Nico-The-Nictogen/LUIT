@@ -32,6 +32,7 @@ export default function ReportingPage() {
   const [cameraStarted, setCameraStarted] = useState(false)
   const streamRef = useRef(null)
   const [cameraKey, setCameraKey] = useState(0)
+  const [permissionDenied, setPermissionDenied] = useState(false)
 
   // Get location on mount
   useEffect(() => {
@@ -48,11 +49,13 @@ export default function ReportingPage() {
     localStorage.setItem('darkMode', JSON.stringify(darkMode))
   }, [darkMode])
 
-  // Refresh location every 30 seconds
+  // Refresh location every 30 seconds (only if permission not denied)
   useEffect(() => {
+    if (permissionDenied) return
+    
     const interval = setInterval(getLocation, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [permissionDenied])
 
   const getLocation = () => {
     setLocationLoading(true)
@@ -61,6 +64,7 @@ export default function ReportingPage() {
     if (!navigator.geolocation) {
       setError('❌ Geolocation not supported by your browser')
       setLocationLoading(false)
+      setPermissionDenied(true)
       return
     }
     
@@ -118,6 +122,7 @@ export default function ReportingPage() {
         switch(err.code) {
           case err.PERMISSION_DENIED:
             errorMessage += 'Please allow location access in your browser settings.'
+            setPermissionDenied(true)
             break
           case err.POSITION_UNAVAILABLE:
             errorMessage += 'Location information unavailable. Make sure GPS is enabled.'
@@ -403,7 +408,10 @@ export default function ReportingPage() {
             }`}>Location unavailable</p>
           )}
           <button
-            onClick={getLocation}
+            onClick={() => {
+              setPermissionDenied(false)
+              getLocation()
+            }}
             className={`mt-2 text-xs font-semibold hover:opacity-80 ${
               locationConflict?.isDuplicate
                 ? darkMode ? 'text-red-300' : 'text-red-600'

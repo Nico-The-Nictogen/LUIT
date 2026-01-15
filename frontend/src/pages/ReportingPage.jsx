@@ -494,27 +494,46 @@ export default function ReportingPage() {
           <div>
             {!cameraStarted ? (
               <div className="space-y-4">
-                <div className={`border p-6 rounded-lg text-center ${
-                  darkMode ? 'bg-slate-800 border-cyan-700' : 'bg-blue-50 border-blue-200'
-                }`}>
-                  <p className={`text-lg font-semibold mb-2 ${
-                    darkMode ? 'text-cyan-300' : 'text-blue-800'
-                  }`}>📷 Ready to Capture?</p>
-                  <p className={`text-sm mb-4 ${
-                    darkMode ? 'text-gray-400' : 'text-blue-600'
-                  }`}>Click the button below to open your camera</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setCameraStarted(true)
-                    startCamera()
-                  }}
-                  className={`w-full py-3 text-white font-bold rounded-lg text-lg ${
-                    darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  📱 Open Camera
-                </button>
+                {geofenceStatus && geofenceStatus.allowed ? (
+                  <>
+                    <div className={`border p-6 rounded-lg text-center ${
+                      darkMode ? 'bg-slate-800 border-cyan-700' : 'bg-blue-50 border-blue-200'
+                    }`}>
+                      <p className={`text-lg font-semibold mb-2 ${
+                        darkMode ? 'text-cyan-300' : 'text-blue-800'
+                      }`}>📷 Ready to Capture?</p>
+                      <p className={`text-sm mb-4 ${
+                        darkMode ? 'text-gray-400' : 'text-blue-600'
+                      }`}>Click the button below to open your camera</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCameraStarted(true)
+                        startCamera()
+                      }}
+                      className={`w-full py-3 text-white font-bold rounded-lg text-lg ${
+                        darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                    >
+                      📱 Open Camera
+                    </button>
+                  </>
+                ) : (
+                  <div className={`border p-6 rounded-lg text-center ${
+                    darkMode ? 'bg-red-900 border-red-700' : 'bg-red-50 border-red-400'
+                  }`}>
+                    <p className={`text-lg font-semibold mb-2 ${
+                      darkMode ? 'text-red-300' : 'text-red-600'
+                    }`}>🚫 Reporting Unavailable</p>
+                    <p className={`text-sm ${
+                      darkMode ? 'text-red-200' : 'text-red-700'
+                    }`}>
+                      {geofenceStatus 
+                        ? `You must be within 800m of Brahmaputra River to report. Currently ${Math.round(geofenceStatus.distance)}m away.`
+                        : 'Move closer to Brahmaputra River to start reporting.'}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
